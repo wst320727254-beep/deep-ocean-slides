@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deep-ocean-slides"
+version = "1.0.0"
+description = "Deep Ocean 学术风 16:9 幻灯片设计系统与生成工具链：设计令牌 + python-pptx 生成器 + HTML 渲染器 + 自动排版自检（Academic deck design system as code）"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "wst320727254-beep", url = "https://github.com/wst320727254-beep" }]
+keywords = [
+  "powerpoint", "pptx", "python-pptx", "slides", "presentation",
+  "design-system", "design-tokens", "academic", "论文汇报", "组会汇报",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business :: Office Suites",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+  "python-pptx>=0.6.23",
+  "Pillow>=9.0",
+]
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6.0"]
+dev = ["pytest>=7.0", "PyYAML>=6.0"]
+all = ["PyYAML>=6.0"]
+
+[project.scripts]
+deepocean = "deepocean.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/wst320727254-beep/deep-ocean-slides"
+Source = "https://github.com/wst320727254-beep/deep-ocean-slides"
+Issues = "https://github.com/wst320727254-beep/deep-ocean-slides/issues"
+Changelog = "https://github.com/wst320727254-beep/deep-ocean-slides/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+deepocean = ["templates/*.css", "templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+src = ["src", "tests"]

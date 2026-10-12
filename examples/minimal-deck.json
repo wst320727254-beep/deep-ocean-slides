@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "title": "我的汇报",
+    "subtitle": "Sub-title in English",
+    "kicker": "组会文献汇报",
+    "journal": "ISR · 2025",
+    "authors": [
+      "汇报人"
+    ],
+    "affiliation": "单位 · 方向",
+    "source_note": "组会文献汇报 · 我的汇报",
+    "language": "zh"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "title": "我的汇报",
+      "title_en": "A Sub-title",
+      "data": {
+        "english_title": "A Sub-title That Shows The Source",
+        "authors": "汇报人 · 你的名字",
+        "affiliation": "单位 · 方向 · 日期",
+        "series": "ISR · 2025",
+        "note": "一句话说清样本、数据与结论",
+        "band": "作者 (年份), 期刊 卷(期): 页码"
+      }
+    },
+    {
+      "layout": "two_column",
+      "kicker": "01 · BACKGROUND",
+      "title": "研究背景",
+      "subtitle": "一句话副题",
+      "data": {
+        "left": {
+          "title": "左主卡标题",
+          "body": "把研究的现实问题写在这里，两到三句话说明为什么值得做。",
+          "items": [
+            "第一个要点",
+            "第二个要点",
+            "第三个要点"
+          ],
+          "footer": "一句话总结缺口"
+        },
+        "right": [
+          {
+            "chip": "IDEA",
+            "chip_en": "要点",
+            "title": "右栏小卡",
+            "body": "补充证据或方法。",
+            "tone": "tint"
+          },
+          {
+            "title": "结论卡",
+            "body": "用深蓝卡收束这一页的判断。",
+            "tone": "primary"
+          }
+        ]
+      }
+    },
+    {
+      "layout": "key_findings",
+      "kicker": "02 · FINDINGS",
+      "title": "关键发现",
+      "data": {
+        "banner": {
+          "heading": "三个数字",
+          "figures": [
+            {
+              "value": "+26%",
+              "label": "搜索提升",
+              "tone": "up"
+            },
+            {
+              "value": "−33%",
+              "label": "推荐下降",
+              "tone": "down"
+            },
+            {
+              "value": "22%",
+              "label": "补偿比例",
+              "tone": "flat"
+            }
+          ]
+        },
+        "cards": [
+          {
+            "title": "发现一",
+            "body": "一句话解释。",
+            "tone": "plain"
+          },
+          {
+            "title": "发现二",
+            "body": "一句话解释。",
+            "tone": "tint"
+          }
+        ],
+        "cards_ratio": 0.5
+      }
+    }
+  ]
+}

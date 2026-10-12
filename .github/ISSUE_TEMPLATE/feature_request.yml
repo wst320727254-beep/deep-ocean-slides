@@ -1,0 +1,26 @@
+name: 功能建议 / Feature request
+description: 新增版式、组件、渲染目标或 CLI 能力
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你遇到的问题
+      description: 描述场景，而不是直接给方案——例如"开题答辩需要一页课题进度甘特图"。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议的做法
+      description: 如果能落到具体版式名/字段名，请写出来（新增版式见 docs/STYLE.md 的四步法）
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: 设计约束确认
+      options:
+        - label: 建议保持"像论文不像海报"的克制风格（不加渐变、阴影、装饰插画）
+          required: true
+        - label: 建议只使用 palettes 里的颜色（需要新颜色请说明理由）
+          required: true

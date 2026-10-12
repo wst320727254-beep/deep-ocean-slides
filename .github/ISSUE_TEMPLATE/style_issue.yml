@@ -1,0 +1,34 @@
+name: 排版问题 / Style issue
+description: 生成的页面不符合风格规范，或某个版式渲染不正确
+title: "[style] "
+labels: ["style"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请先跑 `deepocean check <你的 deck 或 .pptx> --json`，多数排版问题会直接给出规则码（如 `M001`、`T002`、`C002`）。
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 哪一页、哪个元素不对？期望是什么样子？
+    validations:
+      required: true
+  - type: input
+    id: layout
+    attributes:
+      label: 版式名
+      placeholder: 例如 chart_insight
+  - type: textarea
+    id: report
+    attributes:
+      label: 自检报告
+      description: 粘贴 `deepocean check ... --json` 的输出（可截取相关部分）
+      render: json
+  - type: input
+    id: env
+    attributes:
+      label: 环境
+      placeholder: 例如 Windows 11 · Python 3.12 · python-pptx 1.0.2 · PowerPoint 365
+    validations:
+      required: true

@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Ocean 学术风 PPT · 风格规范与制作教程</title>
+<style>
+  :root{
+    --navy:#1B3A5C; --teal:#2E9BA6; --grayblue:#6B86A3; --red:#C0392B;
+    --white:#FFFFFF; --light:#F4F7FB; --mint:#E6F3F5; --pink:#FCE5E2;
+    --line:#D6DCE5; --t1:#1A2230; --t2:#4A5568; --t3:#8B97A8;
+  }
+  *{box-sizing:border-box;}
+  html,body{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  body{
+    margin:0; padding:0; background:#EEF1F5; color:var(--t1);
+    font-family:"Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei","PingFang SC",-apple-system,sans-serif;
+    font-size:15px; line-height:1.7;
+  }
+  .wrap{max-width:1080px; margin:0 auto; background:var(--white); box-shadow:0 2px 24px rgba(27,58,92,.10);}
+  /* 顶部 */
+  .top{background:var(--navy); color:#fff; padding:38px 56px 30px; position:relative;}
+  .top .bar{position:absolute; left:0; top:0; bottom:0; width:8px; background:var(--teal);}
+  .top .eyebrow{font-size:12px; letter-spacing:3px; color:var(--teal); font-weight:700;}
+  .top h1{font-size:32px; margin:10px 0 6px; font-weight:700; letter-spacing:.5px;}
+  .top .sub{font-size:16px; color:#C9D6E4;}
+  .top .meta{margin-top:18px; font-size:13px; color:#9FB3C8;}
+  .top .meta span{margin-right:26px;}
+  /* 主体 */
+  .body{padding:0 56px 60px;}
+  h2{
+    font-size:22px; color:var(--navy); font-weight:700; margin:52px 0 6px;
+    padding-left:14px; border-left:6px solid var(--teal);
+  }
+  h2 .no{color:var(--teal); font-size:14px; letter-spacing:2px; display:block; font-weight:700;}
+  h3{font-size:17px; color:var(--navy); font-weight:700; margin:30px 0 10px;}
+  h4{font-size:15px; color:var(--t1); font-weight:700; margin:20px 0 8px;}
+  p{margin:8px 0;}
+  .lead{color:var(--t2); font-size:14px; margin:6px 0 18px;}
+  table{border-collapse:collapse; width:100%; margin:14px 0 8px; font-size:13.5px;}
+  th{background:var(--navy); color:#fff; text-align:left; padding:9px 12px; font-weight:700; font-size:13px;}
+  td{padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:nth-child(even) td{background:var(--light);}
+  code,.mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace; font-size:12.5px;}
+  code{background:var(--light); padding:1px 5px; border-radius:3px; color:var(--navy);}
+  /* 色卡 */
+  .palette{display:flex; flex-wrap:wrap; gap:14px; margin:16px 0 8px;}
+  .sw{flex:1 1 150px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff;}
+  .sw .chip{height:62px;}
+  .sw .info{padding:9px 11px;}
+  .sw .name{font-size:13px; font-weight:700; color:var(--t1);}
+  .sw .hex{font-size:12px; color:var(--t2); font-family:monospace; margin-top:2px;}
+  .sw .use{font-size:11.5px; color:var(--t3); margin-top:4px; line-height:1.5;}
+  /* 提示块 */
+  .note{background:var(--mint); border-left:4px solid var(--teal); padding:12px 16px; border-radius:0 6px 6px 0; margin:14px 0; font-size:13.5px; color:var(--t1);}
+  .warn{background:var(--pink); border-left:4px solid var(--red); padding:12px 16px; border-radius:0 6px 6px 0; margin:14px 0; font-size:13.5px;}
+  .dark{background:var(--navy); color:#fff; padding:16px 20px; border-radius:8px; margin:14px 0; font-size:13.5px;}
+  .dark b{color:var(--teal);}
+  /* 版式示意图 */
+  .sketch{border:1px solid var(--line); border-radius:8px; padding:14px; margin:14px 0; background:#FBFDFE;}
+  .sketch .cap{font-size:12px; color:var(--t3); margin-top:10px; text-align:center;}
+  .grid{position:relative; width:100%; aspect-ratio:16/9; background:#fff; border:1px solid var(--line); border-radius:4px; overflow:hidden;}
+  .grid .z{position:absolute; font-size:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700;}
+  /* 步骤 */
+  .steps{counter-reset:s; margin:16px 0;}
+  .step{position:relative; padding:0 0 18px 44px; border-left:2px solid var(--line); margin-left:12px;}
+  .step:last-child{border-left-color:transparent; padding-bottom:0;}
+  .step .n{position:absolute; left:-14px; top:-2px; width:26px; height:26px; border-radius:13px; background:var(--navy); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .step .t{font-weight:700; color:var(--navy); font-size:15px;}
+  .step .d{font-size:13.5px; color:var(--t2);}
+  .chk{list-style:none; padding:0; margin:10px 0;}
+  .chk li{padding:5px 0 5px 26px; position:relative; font-size:13.5px; color:var(--t2);}
+  .chk li:before{content:"□"; position:absolute; left:4px; color:var(--teal); font-weight:700;}
+  .foot{background:var(--navy); color:#9FB3C8; padding:20px 56px; font-size:12px;}
+  .foot b{color:var(--teal);}
+  hr{border:0; border-top:1px solid var(--line); margin:36px 0 0;}
+  pre{background:var(--light); border:1px solid var(--line); border-left:4px solid var(--teal); border-radius:0 6px 6px 0; padding:12px 14px; margin:12px 0; overflow:auto; font-size:12.5px; line-height:1.65;}
+  pre code{background:none; padding:0; color:var(--navy);}
+  .tag{display:inline-block; background:var(--mint); color:var(--navy); border:1px solid var(--line); border-radius:10px; padding:1px 8px; font-size:11.5px; font-family:monospace; margin-right:4px;}
+  @media print{body{background:#fff;} .wrap{box-shadow:none;} h2{page-break-after:avoid;} table{page-break-inside:avoid;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <div class="bar"></div>
+  <div class="eyebrow">DESIGN SYSTEM &amp; PRODUCTION GUIDE</div>
+  <h1>Deep Ocean 学术风 PPT · 风格规范与制作教程</h1>
+  <div class="sub">12 页 16:9 文献组会汇报 · 完整数值参数表 · 可迁移复刻手册 · 开源工具链一键生成</div>
+  <div class="meta">
+    <span>画布 1280 × 720 px</span>
+    <span>主色 #1B3A5C</span>
+    <span>辅色 #2E9BA6</span>
+    <span>字体家族 ≤ 2 套</span>
+    <span>v1.1 · 2026-10</span>
+    <span>开源实现：deep-ocean-slides</span>
+  </div>
+</div>
+
+<div class="body">
+
+<!-- ============ 0 总览 ============ -->
+<h2><span class="no">00 · OVERVIEW</span>这套风格是什么</h2>
+<p class="lead">命中学术风设计分支（学术可信 / 证据驱动 / 蓝白克制），叠加自选的 Deep Ocean 冷调配色。核心判断标准：<b>像论文，不像海报</b>。</p>
+
+<table>
+  <tr><th style="width:22%">维度</th><th>取值</th></tr>
+  <tr><td>风格 DNA</td><td>学术可信 · 撑满优先 · 证据化配图 · 卡体克制 · 层次清楚 · 色彩受控</td></tr>
+  <tr><td>适用场景</td><td>课题组组会、文献汇报、开题/中期、学术会议、学科评估、教学课件（理工医）</td></tr>
+  <tr><td>不适用</td><td>产品发布、营销方案、政务党建、儿童/卡通、需要强情绪煽动的场合</td></tr>
+  <tr><td>情绪基调</td><td>克制、冷静、可信、专业。不做营销感，不用大留白当风格</td></tr>
+  <tr><td>页面节奏</td><td>Hero 页 4/12（封面 / 主效应 / 关键发现 / 结尾），peak–valley 交替，无连续 3 页 valley</td></tr>
+  <tr><td>版式策略</td><td>非对称版式 10/12（83%），对称版式仅封面与结尾 2 页；等宽 N 卡片横排 = 0</td></tr>
+</table>
+
+<div class="note"><b>一条总原则：</b>内容页必须"撑满"——内容区累计高度 ≥ 476px（本项目实际做到 430–440px 卡片 + 上下留边），元素不得集中在画布中央 60% 区域。留白是封面/结尾的专利，不是正文页的风格手段。</div>
+
+<!-- ============ 1 画布与栅格 ============ -->
+<h2><span class="no">01 · CANVAS</span>画布规格与栅格</h2>
+
+<table>
+  <tr><th style="width:26%">项目</th><th style="width:22%">数值（px）</th><th>换算 / 说明</th></tr>
+  <tr><td>画布尺寸</td><td><code>1280 × 720</code></td><td>= PowerPoint 默认 16:9 = 13.333 × 7.5 英寸 = 33.87 × 19.05 cm</td></tr>
+  <tr><td>左右安全边距</td><td><code>40</code></td><td>内容可用宽度 = 1200px</td></tr>
+  <tr><td>顶条高度</td><td><code>60</code></td><td>y 0–60</td></tr>
+  <tr><td>标题块</td><td>y <code>72–140</code></td><td>眉标 80 / 主标 110 / 副标 136（本项目实际起于 y=80）</td></tr>
+  <tr><td>内容区 C</td><td>y <code>200–640</code></td><td>实际卡片 y=200，高 430–440</td></tr>
+  <tr><td>页脚条 D</td><td>y <code>680–720</code></td><td>高 40，顶部 1px 分隔线</td></tr>
+</table>
+
+<h3>单位换算常数（跨工具复刻用）</h3>
+<table>
+  <tr><th style="width:30%">从 px 换算到</th><th style="width:24%">系数</th><th>示例</th></tr>
+  <tr><td>磅 pt（PowerPoint 字号）</td><td>× 0.75</td><td>30px → 22.5pt（取 22pt）；44px → 33pt</td></tr>
+  <tr><td>英寸 inch</td><td>× 0.010417</td><td>60px → 0.625 in</td></tr>
+  <tr><td>厘米 cm</td><td>× 0.026458</td><td>40px → 1.06 cm</td></tr>
+  <tr><td>Keynote（1920×1080）</td><td>× 1.5</td><td>1280×720 → 1920×1080；40px → 60px</td></tr>
+  <tr><td>Keynote（2560×1440）</td><td>× 2.0</td><td>40px → 80px</td></tr>
+  <tr><td>Canva / Figma（2x 画布）</td><td>× 2.0</td><td>1280×720 → 2560×1440</td></tr>
+</table>
+
+<div class="note"><b>PowerPoint 复刻捷径：</b>设计 → 幻灯片大小 → 宽屏 (16:9)，得到的就是 13.333×7.5 英寸，与 1280×720px <b>1:1 对应</b>。所有 px 值按 ×0.75 转 pt 即可直接填入字号框。</div>
+
+<!-- ============ 2 色彩 ============ -->
+<h2><span class="no">02 · COLOR</span>色彩系统</h2>
+<p class="lead">主体 ≤ 4 色 + 中性色。强调色只出现在焦点元素上，不铺满。</p>
+
+<div class="palette">
+  <div class="sw"><div class="chip" style="background:#1B3A5C"></div><div class="info"><div class="name">深海蓝 · 主色</div><div class="hex">#1B3A5C</div><div class="use">顶条 / 主标题 / 强调数字 / 页码 / 深色卡底</div></div></div>
+  <div class="sw"><div class="chip" style="background:#2E9BA6"></div><div class="info"><div class="name">青绿 · 辅色</div><div class="hex">#2E9BA6</div><div class="use">装饰条 / 互补品类 / 正向数据 / 图标 / 流程箭头</div></div></div>
+  <div class="sw"><div class="chip" style="background:#6B86A3"></div><div class="info"><div class="name">灰蓝 · 中性</div><div class="hex">#6B86A3</div><div class="use">副文 / 坐标轴标签 / 第三序列 / 无效应象限</div></div></div>
+  <div class="sw"><div class="chip" style="background:#C0392B"></div><div class="info"><div class="name">深砖红 · 警示</div><div class="hex">#C0392B</div><div class="use">仅"减少/替代"类关键数字。单页 ≤3%，全篇 ≤6%</div></div></div>
+</div>
+
+<div class="palette">
+  <div class="sw"><div class="chip" style="background:#FFFFFF; border-bottom:1px solid #D6DCE5"></div><div class="info"><div class="name">白 · 主背景</div><div class="hex">#FFFFFF</div><div class="use">页面底色 / 白卡</div></div></div>
+  <div class="sw"><div class="chip" style="background:#F4F7FB; border-bottom:1px solid #D6DCE5"></div><div class="info"><div class="name">浅灰 · 卡底</div><div class="hex">#F4F7FB</div><div class="use">副卡片 / 图表容器 / 表格斑马</div></div></div>
+  <div class="sw"><div class="chip" style="background:#E6F3F5"></div><div class="info"><div class="name">浅青 · 高亮底</div><div class="hex">#E6F3F5</div><div class="use">互补品类 / 关键结论条 / 种草效应</div></div></div>
+  <div class="sw"><div class="chip" style="background:#FCE5E2"></div><div class="info"><div class="name">浅红 · 警示底</div><div class="hex">#FCE5E2</div><div class="use">替代象限 / 负向数据卡</div></div></div>
+  <div class="sw"><div class="chip" style="background:#D6DCE5"></div><div class="info"><div class="name">线框灰</div><div class="hex">#D6DCE5</div><div class="use">描边 1px / 表格线 / 分隔线</div></div></div>
+</div>
+
+<table>
+  <tr><th style="width:26%">文本层级</th><th style="width:20%">色值</th><th>用途</th></tr>
+  <tr><td>文本主</td><td><code>#1A2230</code></td><td>正文主述、卡片标题</td></tr>
+  <tr><td>文本副</td><td><code>#4A5568</code></td><td>说明文字、注解</td></tr>
+  <tr><td>文本辅</td><td><code>#8B97A8</code></td><td>页脚、单位、来源标注</td></tr>
+</table>
+
+<h3>配色配比（自检用）</h3>
+<table>
+  <tr><th style="width:30%">色族</th><th style="width:22%">占比</th><th>说明</th></tr>
+  <tr><td>蓝族（主色+灰蓝）</td><td>35–50%</td><td>主导，撑起学术感</td></tr>
+  <tr><td>白底</td><td>35–55%</td><td>让页面透气</td></tr>
+  <tr><td>浅青 / 浅灰</td><td>0–20%</td><td>卡片分区</td></tr>
+  <tr><td>红（警示）</td><td>≤ 6%</td><td>超了就降饱和或改灰</td></tr>
+  <tr><td>金色</td><td><b>0%</b></td><td>硬性禁止</td></tr>
+</table>
+
+<div class="warn"><b>禁用清单：</b>紫 / 粉 / 玫红；橙绿大色块；彩虹渐变；纯黑大底；渐变作卡片背景；3D、卡通、二次元、营销插画；楷体行书毛笔字；印章、烟花、金边装饰。</div>
+
+<!-- ============ 3 字体 ============ -->
+<h2><span class="no">03 · TYPE</span>字体与字号</h2>
+
+<table>
+  <tr><th style="width:24%">用途</th><th style="width:26%">字体家族</th><th>说明</th></tr>
+  <tr><td>中文</td><td>思源黑体 Source Han Sans SC / Noto Sans CJK SC</td><td>回退：微软雅黑 / 苹方</td></tr>
+  <tr><td>英文与数字</td><td>Inter / Source Sans 3</td><td>回退：Arial / Helvetica</td></tr>
+  <tr><td>封面英文长标题</td><td>（可选）Times New Roman / 思源宋体</td><td>仅封面或引文使用，全篇 ≤ 2 套家族</td></tr>
+</table>
+
+<h3>字号阶梯（px / pt 双标）</h3>
+<table>
+  <tr><th style="width:26%">层级</th><th style="width:13%">px</th><th style="width:13%">pt</th><th style="width:14%">字重</th><th>颜色 / 用在哪</th></tr>
+  <tr><td>封面中文主标</td><td>44</td><td>33</td><td>Bold</td><td>#1B3A5C</td></tr>
+  <tr><td>封面英文副标</td><td>26</td><td>19.5</td><td>Regular</td><td>#1A2230</td></tr>
+  <tr><td>章节大数字（01/02/03）</td><td>72 / 48</td><td>54 / 36</td><td>Bold</td><td>#1B3A5C / #2E9BA6 / #6B86A3</td></tr>
+  <tr><td>B 区页面主标</td><td>30</td><td>22.5</td><td>Bold</td><td>#1B3A5C</td></tr>
+  <tr><td>眉标（01 · BACKGROUND）</td><td>14</td><td>10.5</td><td>Bold</td><td>#2E9BA6，字间距 2–3</td></tr>
+  <tr><td>页面副标</td><td>15</td><td>11</td><td>Regular</td><td>#6B86A3</td></tr>
+  <tr><td>卡内小标</td><td>16–22</td><td>12–16.5</td><td>Bold / 600</td><td>#1B3A5C 或 #1A2230</td></tr>
+  <tr><td>卡内正文</td><td>13–15</td><td>10–11</td><td>Regular</td><td>#4A5568，行高 1.55–1.6</td></tr>
+  <tr><td>KPI 巨数字</td><td>32–44</td><td>24–33</td><td>Bold</td><td>#C0392B（降） / #2E9BA6（升） / #1B3A5C（中性）</td></tr>
+  <tr><td>KPI 标签</td><td>12</td><td>9</td><td>Regular</td><td>#6B86A3</td></tr>
+  <tr><td>表格 / 注解</td><td>11–12</td><td>8–9</td><td>Regular</td><td>#4A5568 / #8B97A8</td></tr>
+  <tr><td>页脚 / 页码</td><td>12</td><td>9</td><td>Regular / Bold</td><td>左 #8B97A8，右 #1B3A5C</td></tr>
+</table>
+
+<div class="note"><b>排版铁律：</b>① 正文行高统一 1.5–1.6；② 眉标必须加字间距（letter-spacing 2–3）才像学术刊头；③ 全篇只用 2 套字重层级（Bold + Regular），不要出现第三种；④ 数字统一用西文字体，避免中文字体的数字发虚。</div>
+
+<!-- ============ 4 母版 ============ -->
+<h2><span class="no">04 · MASTER</span>母版骨架（全篇锁定一种）</h2>
+
+<div class="sketch">
+  <div class="grid">
+    <div class="z" style="left:0;top:0;width:100%;height:8.33%;background:#1B3A5C;">A · 顶条 60px</div>
+    <div class="z" style="left:2.5%;top:3.6%;width:0.6%;height:1.1%;background:#2E9BA6;"></div>
+    <div class="z" style="left:0;top:8.33%;width:100%;height:11.1%;background:#fff;color:#1B3A5C;justify-content:flex-start;padding-left:3.1%;align-items:flex-start;padding-top:1.4%;font-size:11px;">B · 标题块 y72–140（眉标14 / 主标30 / 副标15）</div>
+    <div class="z" style="left:3.1%;top:27.8%;width:93.8%;height:61.1%;background:#F4F7FB;color:#6B86A3;border:1px dashed #D6DCE5;">C · 内容区 y200–640（卡片高 430–440）</div>
+    <div class="z" style="left:0;top:94.4%;width:100%;height:5.6%;background:#FAFBFC;color:#8B97A8;border-top:1px solid #D6DCE5;">D · 页脚 40px（左单位 / 右页码）</div>
+  </div>
+  <div class="cap">母版分区示意 · 顶条 A3 模式（深蓝实色顶条）</div>
+</div>
+
+<table>
+  <tr><th style="width:12%">区</th><th style="width:22%">范围</th><th>元素与精确数值</th></tr>
+  <tr><td><b>A 顶条</b></td><td>y 0–60，通栏</td><td>深蓝实色 <code>#1B3A5C</code>；左侧 x=32, y=26 放 8×8 青绿方块 <code>#2E9BA6</code>；右侧距边 24px、y=20 放 13px 白字刊名（如 ISR · 2025）</td></tr>
+  <tr><td><b>B 标题块</b></td><td>y 72–140，左右内缩 40</td><td>眉标 14px Bold #2E9BA6（字距 2）；主标 30px Bold #1B3A5C（y≈110）；副标 15px #6B86A3（y≈136）</td></tr>
+  <tr><td><b>C 内容区</b></td><td>y 200–640，宽 1200</td><td>卡片 top=200，height=430/440；左右卡间距 20；背景仅白 / 浅灰 / 浅青</td></tr>
+  <tr><td><b>D 页脚</b></td><td>y 680–720，高 40</td><td>顶部 1px <code>#D6DCE5</code> 分隔线；左 x=40、y=692 放 12px #8B97A8 单位名；右 x=1240 右对齐 12px Bold #1B3A5C 页码「NN / 12」</td></tr>
+</table>
+
+<div class="note"><b>封面与结尾页</b>可省略 A/D 区（本项目封面保留深蓝顶条 60 + 左侧竖条，结尾改为 100px 加高顶条 + 底部 8px 色带）。其余 10 页必须严格四区齐全，且位置全篇一致。</div>
+
+<!-- ============ 5 组件 ============ -->
+<h2><span class="no">05 · COMPONENTS</span>组件规格</h2>
+
+<h3>5.1 卡片 Card</h3>
+<table>
+  <tr><th style="width:24%">属性</th><th style="width:26%">标准值</th><th>变体</th></tr>
+  <tr><td>圆角</td><td><code>6–8 px</code></td><td>小卡 6，大卡 8</td></tr>
+  <tr><td>描边</td><td><code>1px #D6DCE5</code></td><td>强调卡改用 <code>2px</code> 主色/辅色/警示色</td></tr>
+  <tr><td>内边距</td><td>上下 14–20，左右 ≥ 18</td><td>大卡 20–28，小卡 14–16</td></tr>
+  <tr><td>强调方式</td><td>左或上 <code>4–6px</code> 色条</td><td>互补=#2E9BA6，替代=#C0392B，中性=#6B86A3，主论证=#1B3A5C</td></tr>
+  <tr><td>背景</td><td>#FFFFFF / #F4F7FB / #E6F3F5 / #FCE5E2</td><td><b>禁止渐变</b>作卡背景</td></tr>
+  <tr><td>深蓝实色卡</td><td>#1B3A5C 底 + 白字 + 青绿小标</td><td>单页 ≤1 张，全篇 ≤3 张，多卡页禁用</td></tr>
+  <tr><td>同排卡</td><td>等高，高差 ≤ 8px</td><td>用 flex 均分，不用固定高度堆叠</td></tr>
+</table>
+
+<h4>卡内五段骨架（S1/S3/S4 必填）</h4>
+<table>
+  <tr><th style="width:12%">段</th><th style="width:24%">内容</th><th>示例</th></tr>
+  <tr><td>S1 标题条</td><td>眉标 + 小标</td><td>「COMPLEMENTARY · 互补」+「家具 / 杂货」</td></tr>
+  <tr><td>S2 引导句</td><td>一句现象描述</td><td>「关掉个人数据后算法只能推大众爆款」</td></tr>
+  <tr><td>S3 主体</td><td>图 或 要点列表</td><td>柱状图 / 3 条 bullet</td></tr>
+  <tr><td>S4 关键数据</td><td><b>锚底</b>，必填</td><td>「推荐 +328% → 搜索 +26%」</td></tr>
+  <tr><td>S5 尾部标签</td><td>可选</td><td>「Table 3」「p&lt;0.01」</td></tr>
+</table>
+
+<h3>5.2 KPI 巨数字</h3>
+<table>
+  <tr><th style="width:24%">属性</th><th style="width:26%">数值</th><th>说明</th></tr>
+  <tr><td>数字字号</td><td>32 / 44 / 48 / 72 px</td><td>24 / 33 / 36 / 54 pt</td></tr>
+  <tr><td>标签字号</td><td>12 px（9 pt）</td><td>#6B86A3，置于数字上方</td></tr>
+  <tr><td>脚注字号</td><td>12 px</td><td>#4A5568，置于数字下方</td></tr>
+  <tr><td>颜色语义</td><td colspan="2">下降/负向 = <code>#C0392B</code>；上升/正向 = <code>#2E9BA6</code>；中性占比 = <code>#1B3A5C</code></td></tr>
+</table>
+
+<h3>5.3 图表 Chart</h3>
+<table>
+  <tr><th style="width:26%">属性</th><th style="width:26%">设置</th><th>说明</th></tr>
+  <tr><td>类型</td><td><code>barChart</code>（纵向柱）</td><td>对比用柱；趋势用 line；占比用 doughnut</td></tr>
+  <tr><td>分组</td><td><code>clustered</code></td><td>多系列并排</td></tr>
+  <tr><td>尺寸</td><td>高度 230–400 px</td><td>必须显式给高度，否则渲染为 0</td></tr>
+  <tr><td>数据标签</td><td><code>showDataLabels = true</code></td><td>学术汇报要能直接读数</td></tr>
+  <tr><td>系列配色</td><td><code>['#1B3A5C','#2E9BA6']</code></td><td>三/四系列加 <code>#6B86A3</code>、<code>#C0392B</code></td></tr>
+  <tr><td>轴/图例色</td><td>轴 <code>#6B86A3</code>，图例 <code>#4A5568</code></td><td>标题 <code>#1B3A5C</code>，数据标签 <code>#1A2230</code></td></tr>
+  <tr><td>数值格式</td><td>纯数字，%</td><td>负数直接带 − 号，不要括号</td></tr>
+</table>
+
+<h3>5.4 流程 / 机制图</h3>
+<table>
+  <tr><th style="width:26%">属性</th><th style="width:26%">数值</th><th>说明</th></tr>
+  <tr><td>节点尺寸</td><td>110–130 × 50 px</td><td>圆角 6</td></tr>
+  <tr><td>节点底色</td><td>已发生 = <code>#1B3A5C</code>；关键转折 = <code>#2E9BA6</code> 或 <code>#C0392B</code></td><td>白字</td></tr>
+  <tr><td>箭头</td><td>18–20 px 字符「→」</td><td>互补 = #2E9BA6；替代 = #C0392B</td></tr>
+  <tr><td>节点间距 gap</td><td>8–16 px</td><td>用 flex 横向排布</td></tr>
+</table>
+
+<h3>5.5 2×2 矩阵</h3>
+<table>
+  <tr><th style="width:26%">属性</th><th style="width:26%">数值</th><th>说明</th></tr>
+  <tr><td>象限尺寸</td><td>380 × 190 px</td><td>间距 20</td></tr>
+  <tr><td>象限底色</td><td>互补 <code>#E6F3F5</code> / 替代 <code>#FCE5E2</code> / 无效 <code>#F4F7FB</code></td><td>配 2px 同色系描边</td></tr>
+  <tr><td>中心锚点</td><td>20×20 圆点 <code>#1B3A5C</code></td><td>十字交叉处</td></tr>
+  <tr><td>象限内结构</td><td>编号（11px）→ 假设名（16px Bold）→ 条件 + 结果（12px）→ 脚注（11px 斜体）</td><td>四象限结构必须一致</td></tr>
+</table>
+
+<h3>5.6 表格 Table（备用）</h3>
+<table>
+  <tr><th style="width:26%">属性</th><th style="width:26%">数值</th><th>说明</th></tr>
+  <tr><td>表头</td><td><code>#1B3A5C</code> 底 + 白字 Bold</td><td>16–18px</td></tr>
+  <tr><td>斑马纹</td><td>奇数行白 / 偶数行 <code>#F4F7FB</code></td><td>关键格用 <code>#E6F3F5</code> 或 <code>#FCE5E2</code> 高亮</td></tr>
+  <tr><td>格线</td><td><code>1px #D6DCE5</code> 四边</td><td>数值居中或右对齐</td></tr>
+  <tr><td>字号</td><td>12–13 px（9–10 pt）</td><td>表头 Bold</td></tr>
+</table>
+
+<!-- ============ 6 逐页规格 ============ -->
+<h2><span class="no">06 · PAGES</span>12 页逐页版式规格</h2>
+<p class="lead">全部坐标基于 1280×720 画布、左上角原点。这是本项目实际使用的数值，可直接照抄。</p>
+
+<table>
+  <tr><th style="width:4%">#</th><th style="width:17%">页面</th><th style="width:11%">版式</th><th>布局坐标（px）与要点</th></tr>
+  <tr><td>01</td><td>封面</td><td>全屏视觉+大标题</td><td>顶条 h60；左竖条 x0 w6 y120 h480；主标区 top150 left72；分隔线 top410 w160 h2 青绿；作者区 top440；信息条 top580；底部色带 h8</td></tr>
+  <tr><td>02</td><td>研究背景</td><td>非对称双栏 60:40</td><td>左卡 x40 y200 w720 h430（浅灰，左边框 6px 青绿）；右卡 x780 w460（3 张小卡 + 深蓝解法卡）</td></tr>
+  <tr><td>03</td><td>三个科学问题</td><td>巨型数字+洞察</td><td>左大卡 x40 w580 h430（"01" 72px）；右上 x640 w320 h200（"02" 48px）；右下 y430 h210（"03" 48px）</td></tr>
+  <tr><td>04</td><td>实验设计</td><td>上大图+下方卡片</td><td>流程区 top200 h120（3 步 380×80 + 24px 箭头）；对比区 top350 h280（Control 白卡 / VS / Treatment 浅青+红框）</td></tr>
+  <tr><td>05</td><td>技术路线</td><td>左标题+右内容</td><td>左深蓝标题栏 x40 w360 h430；右 x420 三步列表（56px 圆点序号 + 卡片，gap 18）</td></tr>
+  <tr><td>06</td><td>主效应</td><td>左大图+右侧洞察</td><td>图表卡 x40 w700 h440（Chart h390）；右侧 x760 4 张卡（3 KPI + 1 深蓝 IV 卡）</td></tr>
+  <tr><td>07</td><td>品类异质性</td><td>非对称双栏</td><td>左互补卡 x40 w660 h440（浅青，上边框 6px 青绿）；右替代卡 x720 w520 h440（浅灰，上边框 6px 红）</td></tr>
+  <tr><td>08</td><td>概念框架</td><td>非对称双栏+中央连接</td><td>左形成 x40 w580 h440；中央箭头 x625 w30 y380（⇄ + update）；右满足 x660 w580 h440</td></tr>
+  <tr><td>09</td><td>2×2 机制矩阵</td><td>左标题+右内容</td><td>左维度说明 x40 w340 h440；右矩阵 x400 w840（4 象限 380×190，中心 20px 圆点）</td></tr>
+  <tr><td>10</td><td>NLP 搜索词证据</td><td>左大图+右侧解读</td><td>图表卡 x40 w720 h440（Chart h400）；右侧 x780 w460（2 张解读卡 + 1 深蓝结论卡）</td></tr>
+  <tr><td>11</td><td>关键发现与启示</td><td>巨型数字+洞察</td><td>核心结论横幅 top200 h110 通栏深蓝（内嵌 3 个 44px 数字）；下方 top330 h310，宽 560 + 两张 flex 均分</td></tr>
+  <tr><td>12</td><td>总结与展望</td><td>居中金句</td><td>加高顶条 h100；金句区 top140（浅青，左边框 6px，标题 22px）；下方 top350 h270 左右两卡（局限白卡 / 未来深蓝卡）；致谢条 bottom50</td></tr>
+</table>
+
+<div class="note"><b>版式排布规则（改页数时照此推导）：</b>① 相邻两页版式不得相同；② 连续 2 页对称版式必须打断；③ 等宽 N 卡片横排全篇 ≤ 2 页；④ Hero 页禁用等宽卡片横排；⑤「左大图+右侧文字」+「非对称双栏」合计不超过全篇 40%。</div>
+
+<!-- ============ 7 内容数据 ============ -->
+<h2><span class="no">07 · DATA</span>本套 PPT 使用的论文数值</h2>
+<p class="lead">来源：Yuan, Chen, Wang &amp; Sun (2025), <i>Information Systems Research</i>, 36(1): 84–106, DOI 10.1287/isre.2022.0294。换论文时，只替换这一节的数值，版式与配色全部可复用。</p>
+
+<h3>实验设定</h3>
+<table>
+  <tr><th style="width:28%">项</th><th>值</th></tr>
+  <tr><td>样本</td><td>555,800 名用户（首页推荐曝光）</td></tr>
+  <tr><td>平台</td><td>世界领先电商平台，20 亿+ 商品、数千万卖家、数亿买家</td></tr>
+  <tr><td>时间</td><td>2019 年夏季一个无大促的常规日</td></tr>
+  <tr><td>算法</td><td>协同过滤 CF</td></tr>
+  <tr><td>对照组 Control</td><td>输入 = 商品 + 商家 + <b>个人数据</b>（人口统计、历史浏览/点击/购买）</td></tr>
+  <tr><td>处理组 Treatment</td><td>输入 = 商品 + 商家（禁用个人数据），退化为 popularity-based</td></tr>
+  <tr><td>品类</td><td>26 个产品类目</td></tr>
+</table>
+
+<h3>主效应（Table 1 / Table 2）</h3>
+<table>
+  <tr><th style="width:22%">指标</th><th style="width:20%">推荐渠道</th><th style="width:20%">搜索渠道</th><th>补偿比例</th></tr>
+  <tr><td>浏览 PV</td><td>−33.4%（−39.03***）</td><td>+7.1%（+8.532***）</td><td>22%</td></tr>
+  <tr><td>点击 Click</td><td>−83.6%（−4.416***）</td><td>+6.3%（+0.310***）</td><td>7%</td></tr>
+  <tr><td>订单 Order</td><td>−85.9%（−0.019***）</td><td>+7.1%（+0.0075***）</td><td>—</td></tr>
+  <tr><td>销售额 GMV</td><td>−81.1%（−1.106***）</td><td>+6.4%（+0.584*）</td><td>52.8%</td></tr>
+</table>
+<p style="font-size:13px;color:var(--t2);">IV 弹性（以 Treat 为工具变量）：推荐 PV 每减 1 单位 → 搜索 PV +0.219***；IPV −0.0701***；Orders −0.395***；GMV −0.529*。N = 555,800。</p>
+
+<h3>品类异质性（Table 3 / Table 4）</h3>
+<table>
+  <tr><th style="width:26%">品类</th><th style="width:20%">推荐 PV</th><th style="width:20%">搜索 PV</th><th>关系</th></tr>
+  <tr><td>家具 Furniture</td><td>+328%</td><td>+26%</td><td><b>互补</b></td></tr>
+  <tr><td>杂货 Grocery</td><td>+320%</td><td>+26%</td><td><b>互补</b></td></tr>
+  <tr><td>服装 Clothes</td><td>−91%</td><td>+9%</td><td>替代</td></tr>
+  <tr><td>鞋/包 Shoe·Bag</td><td>−94%</td><td>0%（0.0243 n.s.）</td><td>无效应</td></tr>
+  <tr><td>母婴 Baby clothes</td><td>−95%</td><td>0%（0.0281 n.s.）</td><td>无效应</td></tr>
+</table>
+
+<h3>机制验证（Table 5 – Table 8）</h3>
+<table>
+  <tr><th style="width:26%">检验</th><th style="width:20%">推荐 PV</th><th style="width:20%">搜索 PV</th><th>N</th></tr>
+  <tr><td>互补 · 高兴趣</td><td>+48%</td><td>+12%</td><td>54,204</td></tr>
+  <tr><td>互补 · 低兴趣</td><td>+369%</td><td>+30%</td><td>1,057,396</td></tr>
+  <tr><td>替代 · 高兴趣</td><td>−92%</td><td>+10%</td><td>501,596</td></tr>
+  <tr><td>替代 · 低兴趣</td><td>−91%</td><td>0%（−0.00510 n.s.）</td><td>12,837,604</td></tr>
+</table>
+<table>
+  <tr><th style="width:26%">NLP 查询特征</th><th style="width:20%">Generic 通用词</th><th style="width:20%">Query Length</th><th>N</th></tr>
+  <tr><td>互补 · 高兴趣</td><td>+19%（0.0337***）</td><td>+2%（0.0413 n.s.）</td><td>6,290</td></tr>
+  <tr><td>互补 · 低兴趣</td><td>+13%（0.0238***）</td><td>0%（−0.00668 n.s.）</td><td>35,421</td></tr>
+  <tr><td>替代 · 高兴趣</td><td>+3%（0.00239 n.s.）</td><td>+4%（0.115***）</td><td>79,247</td></tr>
+  <tr><td>替代 · 低兴趣</td><td>+8%（0.00991***）</td><td>+1%（0.0215***）</td><td>165,980</td></tr>
+</table>
+
+<!-- ============ 8 复刻教程 ============ -->
+<h2><span class="no">08 · TUTORIAL</span>在别处复刻这套风格</h2>
+
+<h3>路线 A · PowerPoint（推荐，换算最直接）</h3>
+<div class="steps">
+  <div class="step"><span class="n">1</span><div class="t">设画布</div><div class="d">设计 → 幻灯片大小 → 宽屏 (16:9)。即 13.333×7.5 英寸，与 1280×720px 1:1。</div></div>
+  <div class="step"><span class="n">2</span><div class="t">建主题色</div><div class="d">设计 → 变体 → 颜色 → 自定义颜色。依次填入：深色1 <code>#1B3A5C</code>、着色2 <code>#2E9BA6</code>、着色3 <code>#6B86A3</code>、强调 <code>#C0392B</code>、浅色 <code>#F4F7FB</code>/<code>#E6F3F5</code>。命名保存为「Deep Ocean」。</div></div>
+  <div class="step"><span class="n">3</span><div class="t">建主题字体</div><div class="d">设计 → 变体 → 字体 → 自定义。中文「思源黑体 / 微软雅黑」，西文「Inter / Arial」。</div></div>
+  <div class="step"><span class="n">4</span><div class="t">做幻灯片母版</div><div class="d">视图 → 幻灯片母版。画 60px 高深蓝顶条（1280×60 ≈ 宽 13.33in × 高 0.625in），左侧放 8×8px 青绿方块，底部画 40px 页脚区 + 1px 分隔线，右下角插页码占位符。关闭母版视图后所有页自动继承。</div></div>
+  <div class="step"><span class="n">5</span><div class="t">拖参考线</div><div class="d">视图 → 参考线。加水平线 60 / 140 / 200 / 640 / 680 px（换算 in：0.625 / 1.458 / 2.083 / 6.667 / 7.083），垂直线 40 / 1240 px（0.417 / 12.917 in）。</div></div>
+  <div class="step"><span class="n">6</span><div class="t">按逐页表摆元素</div><div class="d">照第 06 节坐标表，用「大小和位置」窗格精确填 x/y/宽/高（单位选英寸，px × 0.010417）。卡片用形状填充 + 4–6px 左侧色条（可直接用矩形叠加）。</div></div>
+  <div class="step"><span class="n">7</span><div class="t">插图表</div><div class="d">插入 → 图表 → 簇状柱形图。右键设置数据系列格式，逐个改填充色为 <code>#1B3A5C</code> / <code>#2E9BA6</code>；开启数据标签；坐标轴文字改 <code>#6B86A3</code>。</div></div>
+  <div class="step"><span class="n">8</span><div class="t">自检</div><div class="d">对照第 09 节清单逐条打勾。</div></div>
+</div>
+
+<h3>路线 B · Keynote</h3>
+<div class="note">Keynote 默认 16:9 为 1920×1080 → <b>全部 px 值 × 1.5</b>（字号 × 1.5 后即为 pt 等效）。若用 2560×1440 则 × 2。主题色在「格式 → 高级 → 颜色」或自定主题中填入同样 hex；顶条 90px 高（60×1.5）。</div>
+
+<h3>路线 C · Figma / Canva / 即梦 / Gamma 等在线工具</h3>
+<div class="note">画布设 1920×1080（×1.5）或 2560×1440（×2）。把第 02 节色板存为项目色板/品牌色，第 03 节字号阶梯存为文字样式（Text Styles），第 05 节卡片存为组件（Component）。这样换内容时只改文字，样式自动继承。</div>
+
+<h3>路线 D · 用开源工具链一键生成（推荐）</h3>
+<div class="note">本规范已工程化为开源库 <code>deep-ocean-slides</code>：第 01–05 节的每个数值都是代码里的一个 token，
+第 06 节 12 页坐标表就是 <code>layouts.py</code> 里的几何常量，deck 用 YAML 描述。
+<code>deepocean build deck.yaml -o out.pptx</code> 直接产出可继续编辑的 PPTX，
+<code>deepocean html deck.yaml</code> 产出单文件网页版，<code>deepocean check</code> 按第 09 节清单自动自检。
+详细用法见下一节。</div>
+
+<!-- ============ 9 自检 ============ -->
+<h2><span class="no">09 · CHECKLIST</span>交付前自检清单</h2>
+
+<h4>母版与一致性</h4>
+<ul class="chk">
+  <li>顶条 / 标题位置 / 页脚 / 页码 全篇一致（封面与结尾可例外）</li>
+  <li>刊名角标（如 ISR · 2025）位置全篇固定</li>
+  <li>左右安全边距 40px 未被突破</li>
+</ul>
+
+<h4>视觉与信息密度</h4>
+<ul class="chk">
+  <li>每页主视觉 ≥ 内容区 30%；Hero 页有 ≥ 48px 锚点数字或 ≥ 40% 主视觉</li>
+  <li>内容页卡片撑满，无大面积空白带；卡片填充率 ≥ 80%</li>
+  <li>每页 ≥ 1 个视觉锚点（≥44px 元素 或 ≥40% 面积图）</li>
+  <li>相邻两页视觉重量有差异（最大元素面积比 &gt; 1.5:1 或版式结构不同）</li>
+</ul>
+
+<h4>色彩</h4>
+<ul class="chk">
+  <li>红色用量 ≤ 6%，金色 = 0</li>
+  <li>无紫粉玫红、无橙绿大色块、无彩虹渐变、无纯黑大底</li>
+  <li>内容区未使用深色实底或高饱和彩色实底</li>
+  <li>强调色只出现在焦点元素上</li>
+</ul>
+
+<h4>文字</h4>
+<ul class="chk">
+  <li>正文 ≥ 13px（学术风下限 20px 适用于大段正文；卡片内小字不低于 11px）</li>
+  <li>文字未溢出卡片、无断词异常</li>
+  <li>深底白字 / 浅底深字，对比度 ≥ 4.5:1</li>
+  <li>全篇只用 2 套字体家族、2 级字重</li>
+</ul>
+
+<h4>数据与图表</h4>
+<ul class="chk">
+  <li>每个数据页含：主图 + 洞察文字 + ≥1 个关键数字（"数据 + 判断"两段式）</li>
+  <li>图表有数据标签；轴/图例色为中性灰，不抢戏</li>
+  <li>所有数值可追溯到论文 Table / Figure，页脚标注来源</li>
+  <li>无杜撰公式、虚构数据、编造引用</li>
+</ul>
+
+<h4>结构</h4>
+<ul class="chk">
+  <li>多卡页有"双重锚定"：一种物理连接（箭头/共享外框）+ 一种共享锚点（标题条/底部强调条）</li>
+  <li>无 3D / 卡通 / 营销插画</li>
+  <li>占位文字已清零</li>
+</ul>
+
+<!-- ============ 10 工具链 ============ -->
+<h2><span class="no">10 · TOOLKIT</span>把它跑起来：开源工具链</h2>
+<p class="lead">本规范已工程化为开源库 <b>deep-ocean-slides</b> —— 规范里的每个数字都是代码里的一个 token，
+改一处、全篇同步；第 06 节的坐标表就是 <code>layouts.py</code> 里的几何常量。</p>
+
+<table>
+  <tr><th style="width:24%">你想做的事</th><th style="width:34%">命令</th><th>产物</th></tr>
+  <tr><td>真·可编辑 PPTX</td><td><code>deepocean build deck.yaml -o out.pptx</code></td><td>原生形状 + 可编辑图表，Office 主题色已写入</td></tr>
+  <tr><td>网页版 / PDF</td><td><code>deepocean html deck.yaml -o out.html</code></td><td>单文件 HTML，浏览器 Ctrl/Cmd + P 导出 PDF</td></tr>
+  <tr><td>排版自检</td><td><code>deepocean check out.pptx --strict</code></td><td>规则码报告，可直接接 CI 卡住合并</td></tr>
+  <tr><td>一次产出三样</td><td><code>deepocean preview deck.yaml --out out</code></td><td>pptx + html + 自检报告</td></tr>
+  <tr><td>从模板开始</td><td><code>deepocean init mytalk</code></td><td>3 页可编译模板（<code>--demo</code> 则给 13 页）</td></tr>
+  <tr><td>查字段 / 查令牌</td><td><code>deepocean layouts chart_insight</code> · <code>deepocean tokens --md</code></td><td>版式字段契约、完整令牌表</td></tr>
+</table>
+
+<h3>一份 deck 就是一个 YAML 文件</h3>
+<pre><code>meta:
+  title: 推荐如何影响消费者搜索
+  kicker: 组会文献汇报
+  journal: ISR · 2025
+  source_note: 组会文献汇报 · ISR 2025, 36(1): 84-106
+
+pages:
+  - layout: cover
+    title: 推荐如何影响消费者搜索
+    data:
+      english_title: How Recommendation Affects Customer Search
+      authors: 汇报人 · 你的名字
+      series: ISR · 2025
+
+  - layout: chart_insight            # 左大图 + 右洞察（第 06 节第 06 页）
+    kicker: 05 · MAIN EFFECT
+    title: 主效应：推荐塌陷，搜索只补回一小部分
+    hero: true                       # 标记为峰值页，参与节奏检查
+    data:
+      chart:
+        type: bar
+        categories: [浏览 PV, 点击, 订单, 销售额]
+        series:
+          - {name: 推荐渠道, values: [-33.4, -83.6, -85.9, -81.1], color: navy}
+          - {name: 搜索渠道, values: [7.1, 6.3, 7.1, 6.4], color: teal}
+        height: 390                  # 图表必须显式给高度
+      kpis:
+        - {value: "−33.4%", label: 推荐渠道浏览 PV, note: "−39.03***", tone: down}
+        - {value: "+7.1%",  label: 搜索渠道浏览 PV, note: "+8.532***", tone: up}
+      takeaway: {label: IV 弹性, text: 推荐 PV 每减少 1 单位，搜索 PV 增加 0.219***}</code></pre>
+
+<div class="note"><b>12 个版式都有字段契约：</b><span class="tag">cover</span><span class="tag">two_column</span><span class="tag">big_number</span><span class="tag">experiment_design</span><span class="tag">roadmap</span><span class="tag">chart_insight</span><span class="tag">split_cards</span><span class="tag">concept_flow</span><span class="tag">matrix2x2</span><span class="tag">data_table</span><span class="tag">key_findings</span><span class="tag">closing</span>
+字段名写错、必填项漏掉，<code>deepocean check</code> 会当场指出；新增版式的四步法见仓库 <code>docs/STYLE.md</code>。</div>
+
+<h3>Python API：改 token 就改全篇</h3>
+<pre><code>from deepocean import tokens, primitives as pr
+
+pr.rect(slide, 40, 200, 1200, 440, fill="light", radius=8, line="line")
+pr.add_text(slide, 60, 220, 700, 60, pr.P([
+    pr.T("自定义版式", "card_title"),
+    pr.T(" · 一切长度都是 1280×720 画布上的 px", "card_body_sm", color="grayblue"),
+]))
+pr.bullets(slide, 60, 320, 700, 280, ["改 token 就改全篇", "字距、行高、配比都不用记"])
+
+tokens.hex_of("navy")        # '#1B3A5C'
+tokens.TYPE_SCALE["page_title"].pt   # 22.5</code></pre>
+
+<!-- ============ 11 LINT ============ -->
+<h2><span class="no">11 · LINT</span>第 09 节清单 → 自动检查规则</h2>
+<p class="lead">清单里凡是能用数值判断的条目，都已变成 <code>deepocean check</code> 里可执行的规则码。</p>
+
+<table>
+  <tr><th style="width:40%">规范条目（第 09 节）</th><th style="width:22%">规则码</th><th>判定方式</th></tr>
+  <tr><td>左右安全边距 40px 未被突破</td><td><code>M001</code></td><td>读形状坐标，越界即报错（通栏顶条/色带豁免）</td></tr>
+  <tr><td>内容页卡片撑满，无大面积空白带</td><td><code>M003</code></td><td>内容页是否有元素落到 y ≥ 600</td></tr>
+  <tr><td>正文 ≥ 13px，卡片内小字不低于 11px</td><td><code>T001</code> <code>T002</code></td><td>逐 run 读字号（pt ÷ 0.75 = px）</td></tr>
+  <tr><td>全篇只用 2 套字体家族、2 级字重</td><td><code>T003</code> <code>T004</code></td><td>统计每页字体家族数与字重数</td></tr>
+  <tr><td>文字未溢出卡片</td><td><code>T005</code></td><td>CJK 感知的宽度估算 → 行数 × 行高 与文本框比高</td></tr>
+  <tr><td>红色用量 ≤ 6%，金色 = 0</td><td><code>C003</code> <code>C002</code></td><td>按色相 + 面积统计；金色直接判为禁用色</td></tr>
+  <tr><td>无紫粉玫红、无橙绿大色块、无纯黑大底</td><td><code>C002</code></td><td>色相区间 + 饱和度为阈值</td></tr>
+  <tr><td>强调色只出现在焦点元素上 / 主体 ≤ 4 色</td><td><code>C001</code> <code>C004</code></td><td>任何不在色板内的颜色即报错；浅青浅灰占比 ≤ 20%</td></tr>
+  <tr><td>深底白字 / 浅底深字，对比度 ≥ 4.5:1</td><td><code>K001</code></td><td>WCAG 相对亮度比（≥32px 展示字放宽到 3.0）</td></tr>
+  <tr><td>每页 ≥ 1 个视觉锚点</td><td><code>A001</code></td><td>是否存在 ≥44px 文字或 ≥40% 面积的主视觉</td></tr>
+  <tr><td>图表有数据标签；必须显式给高度</td><td><code>H001</code> <code>H002</code></td><td>读图表 XML 的数据标签开关与高度</td></tr>
+  <tr><td>Hero 页 4/12、无连续 3 页 valley、相邻页版式不重复</td><td><code>R002</code> <code>R003</code> <code>R004</code></td><td>按页序分析 layout 与 hero 标记</td></tr>
+  <tr><td>等宽 N 卡片横排 ≤ 2 页</td><td><code>R005</code></td><td>统计多卡并排页数</td></tr>
+  <tr><td>占位文字已清零</td><td><code>X001</code></td><td>匹配 lorem / TODO / 占位 / 待填 / xxx 等</td></tr>
+  <tr><td>所有数值可追溯到论文 Table / Figure</td><td>—（人工）</td><td>页脚来源需要人确认</td></tr>
+  <tr><td>叙事逻辑、配图是否证据化</td><td>—（人工）</td><td>机器判不了，仍需自己读一遍</td></tr>
+</table>
+
+<div class="warn"><b>剩下的三件人工事：</b>数值是否真的来自论文原表、每页是否说了"所以呢"、叙事节奏是否成立。
+其余都可以交给 <code>deepocean check deck.yaml --strict</code>，在 CI 里把不合格的稿子挡在门外。</div>
+
+<hr>
+<div class="dark" style="margin-top:28px;">
+  <b>一句话记住这套风格：</b>深蓝顶条压住气场，青绿只点关键，红色只标"下降"，卡片撑满不留白，
+  每页一个 ≥44px 的数字或一张 ≥40% 的图当锚点，所有数据都带一句"所以呢"的判断。
+</div>
+
+</div><!-- /body -->
+
+<div class="foot">
+  <b>Deep Ocean 学术风 PPT · 风格规范与制作教程 v1.1</b> ｜ 配套成品：<code>推荐如何影响搜索.pptx</code>（12 页 16:9）<br>
+  开源实现：<b>deep-ocean-slides</b> — github.com/wst320727254-beep/deep-ocean-slides ｜ MIT（代码）+ CC BY 4.0（文档）<br>
+  数值基准：1280×720 px ｜ 换算法：pt = px × 0.75 ｜ Keynote/Canva = px × 1.5（1920 宽）或 × 2（2560 宽）<br>
+  单文件 HTML，可直接复制到任意设备浏览器打开；Ctrl/Cmd + P 可导出 PDF 随身带走。
+</div>
+
+</div><!-- /wrap -->
+</body>
+</html>

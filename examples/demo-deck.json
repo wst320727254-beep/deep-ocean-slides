@@ -1,0 +1,574 @@
+{
+  "meta": {
+    "title": "推荐如何影响消费者搜索",
+    "subtitle": "How Recommendation Affects Customer Search: A Field Experiment",
+    "kicker": "组会文献汇报",
+    "journal": "ISR · 2025",
+    "authors": [
+      "Yuan",
+      "Chen",
+      "Wang",
+      "Sun"
+    ],
+    "affiliation": "管理科学与工程 · 2026",
+    "date": "2026-10",
+    "source_note": "组会文献汇报 · ISR 2025, 36(1): 84-106 · DOI 10.1287/isre.2022.0294",
+    "footer_note": "组会文献汇报 · How Recommendation Affects Customer Search (ISR 2025)",
+    "language": "zh"
+  },
+  "pages": [
+    {
+      "layout": "cover",
+      "title": "推荐如何影响消费者搜索",
+      "title_en": "A Field Experiment on Recommendation and Search",
+      "data": {
+        "english_title": "How Recommendation Affects Customer Search: A Field Experiment",
+        "authors": "汇报人 · 研之有理队",
+        "affiliation": "管理科学与工程 · 文献组会 · 2026 年 10 月",
+        "series": "ISR · 2025",
+        "note": "样本 555,800 名用户 · 26 个产品类目 · 一个无大促的常规日",
+        "band": "Yuan, Chen, Wang & Sun (2025), Information Systems Research 36(1): 84-106"
+      }
+    },
+    {
+      "layout": "two_column",
+      "kicker": "01 · BACKGROUND",
+      "title": "研究背景",
+      "subtitle": "算法推荐与主动搜索，是替代还是互补？",
+      "data": {
+        "ratio": 0.6,
+        "left": {
+          "title": "个性化推荐正在替用户做选择",
+          "body": "电商平台用协同过滤把个人历史行为压缩成推荐位。当个人数据被切断，算法只能退回大众爆款，推荐位的个性化程度随之崩塌。",
+          "items": [
+            "推荐位的流量高度依赖个人数据（人口统计、浏览、点击、购买）",
+            "搜索是用户自己表达需求的渠道，与推荐形成两种不同的信息获取方式",
+            "已有研究多在观测数据上争论替代/互补，缺少随机实验证据"
+          ],
+          "footer": "文献缺口：缺少在同一实验里同时观察推荐与搜索的田野证据"
+        },
+        "right": [
+          {
+            "chip": "IDENTIFICATION",
+            "chip_en": "识别策略",
+            "title": "切断个人数据",
+            "body": "处理组推荐算法只输入商品与商家特征，个人数据被禁用。",
+            "tone": "tint"
+          },
+          {
+            "chip": "SCALE",
+            "chip_en": "实验规模",
+            "title": "555,800 名用户",
+            "body": "头部电商平台，20 亿+ 商品、数千万卖家、数亿买家。",
+            "tone": "plain"
+          },
+          {
+            "chip": "QUESTION",
+            "chip_en": "研究问题",
+            "title": "搜索能否补回推荐损失",
+            "body": "推荐渠道下滑时，搜索渠道的补偿比例究竟有多大？",
+            "tone": "plain"
+          },
+          {
+            "title": "本文答案：品类决定关系",
+            "body": "互补品类的搜索被推荐带动，替代品类的搜索几乎补不回来。",
+            "tone": "primary"
+          }
+        ]
+      }
+    },
+    {
+      "layout": "big_number",
+      "kicker": "02 · QUESTIONS",
+      "title": "三个科学问题",
+      "subtitle": "从主效应到机制，逐层收窄",
+      "hero": false,
+      "data": {
+        "mode": "hero",
+        "items": [
+          {
+            "number": "01",
+            "title": "主效应：推荐减少多少，搜索增加多少",
+            "body": "禁用个人数据后，推荐与搜索渠道的浏览、点击、订单、销售额如何变化？",
+            "tone": "primary"
+          },
+          {
+            "number": "02",
+            "title": "异质性：为什么会分化",
+            "body": "26 个品类里，哪些品类呈现互补、哪些呈现替代？",
+            "tone": "accent"
+          },
+          {
+            "number": "03",
+            "title": "机制：兴趣与查询特征",
+            "body": "消费者兴趣水平与搜索词的通用性/长度解释了这种分化吗？",
+            "tone": "neutral"
+          }
+        ]
+      }
+    },
+    {
+      "layout": "experiment_design",
+      "kicker": "03 · DESIGN",
+      "title": "实验设计",
+      "subtitle": "同一天、同一批用户、单变量差异",
+      "data": {
+        "steps": [
+          {
+            "label": "STEP 1",
+            "text": "选定一个无大促的常规日，锁定首页推荐曝光"
+          },
+          {
+            "label": "STEP 2",
+            "text": "随机分流：对照组保留个人数据，处理组禁用"
+          },
+          {
+            "label": "STEP 3",
+            "text": "在同一时间窗观测推荐与搜索两条渠道"
+          }
+        ],
+        "groups": {
+          "left": {
+            "title": "Control · 对照组",
+            "body": "推荐算法输入 = 商品 + 商家 + 个人数据",
+            "items": [
+              "人口统计",
+              "历史浏览 / 点击 / 购买",
+              "个性化排序"
+            ],
+            "tone": "plain"
+          },
+          "right": {
+            "title": "Treatment · 处理组",
+            "body": "推荐算法输入 = 商品 + 商家（禁用个人数据）",
+            "items": [
+              "退化为 popularity-based",
+              "大众爆款优先",
+              "个性化排序失效"
+            ],
+            "tone": "tint"
+          }
+        },
+        "vs": "VS",
+        "verdict": "唯一差异是个人数据是否进入推荐算法 —— 渠道差异可归因于推荐个性化"
+      }
+    },
+    {
+      "layout": "roadmap",
+      "kicker": "04 · METHOD",
+      "title": "技术路线",
+      "subtitle": "从实验到机制的四步证据链",
+      "data": {
+        "aside": {
+          "title": "识别与推断",
+          "body": "以处理分配为工具变量，剥离推荐渠道的内生性，再用品类分组检验异质性。",
+          "items": [
+            "协同过滤 CF 推荐",
+            "ITT + IV 弹性",
+            "26 品类分组回归",
+            "NLP 查询特征"
+          ],
+          "footer": "N = 555,800"
+        },
+        "steps": [
+          {
+            "no": "01",
+            "title": "主效应估计",
+            "body": "对比两组的推荐/搜索渠道 PV、点击、订单、GMV。",
+            "meta": "Table 1 · Table 2"
+          },
+          {
+            "no": "02",
+            "title": "渠道弹性",
+            "body": "用处理分配做 IV，估计推荐 → 搜索的替代/互补弹性。",
+            "meta": "IV 弹性"
+          },
+          {
+            "no": "03",
+            "title": "品类异质性",
+            "body": "分品类估计，识别互补、替代与无效应三类。",
+            "meta": "Table 3 · Table 4"
+          },
+          {
+            "no": "04",
+            "title": "机制检验",
+            "body": "兴趣高低 × 互补替代四象限 + 搜索词 NLP 特征。",
+            "meta": "Table 5 – Table 8"
+          }
+        ]
+      }
+    },
+    {
+      "layout": "chart_insight",
+      "kicker": "05 · MAIN EFFECT",
+      "title": "主效应：推荐塌陷，搜索只补回一小部分",
+      "subtitle": "禁用个人数据后各渠道相对变化（%）",
+      "hero": true,
+      "data": {
+        "side_ratio": 0.6,
+        "chart": {
+          "type": "bar",
+          "title": "推荐渠道与搜索渠道的变化幅度",
+          "categories": [
+            "浏览 PV",
+            "点击",
+            "订单",
+            "销售额"
+          ],
+          "series": [
+            {
+              "name": "推荐渠道",
+              "values": [
+                -33.4,
+                -83.6,
+                -85.9,
+                -81.1
+              ],
+              "color": "navy"
+            },
+            {
+              "name": "搜索渠道",
+              "values": [
+                7.1,
+                6.3,
+                7.1,
+                6.4
+              ],
+              "color": "teal"
+            }
+          ],
+          "unit": "%",
+          "height": 390,
+          "note": "所有系数在 1% 水平显著（GMV 搜索 +0.584, p<0.1）"
+        },
+        "kpis": [
+          {
+            "value": "−33.4%",
+            "label": "推荐渠道 浏览 PV",
+            "note": "−39.03***",
+            "tone": "down"
+          },
+          {
+            "value": "+7.1%",
+            "label": "搜索渠道 浏览 PV",
+            "note": "+8.532***",
+            "tone": "up"
+          },
+          {
+            "value": "22%",
+            "label": "浏览 PV 补偿比例",
+            "note": "搜索补回推荐损失的两成",
+            "tone": "flat"
+          }
+        ],
+        "cards": [
+          {
+            "title": "越靠后的漏斗环节，补偿越弱",
+            "body": "浏览 22% → 点击 7%，订单与 GMV 基本靠价格与库存而非搜索补回。",
+            "tone": "plain"
+          }
+        ],
+        "takeaway": {
+          "label": "IV 弹性",
+          "text": "推荐 PV 每减少 1 单位，搜索 PV 增加 0.219***（95% 置信区间不含 0）"
+        }
+      }
+    },
+    {
+      "layout": "split_cards",
+      "kicker": "06 · HETEROGENEITY",
+      "title": "品类异质性：互补还是替代，由品类决定",
+      "subtitle": "同一实验、同样的算法改动，26 个品类走向两端",
+      "data": {
+        "ratio": 0.56,
+        "left": {
+          "chip": "COMPLEMENTARY",
+          "chip_en": "互补",
+          "title": "家具 / 杂货：推荐带动搜索",
+          "body": "需要多轮比较、决策链路长的品类，推荐位把用户送进搜索做深挖。",
+          "items": [
+            "家具：推荐 +328%，搜索 +26%",
+            "杂货：推荐 +320%，搜索 +26%"
+          ],
+          "footer": "Table 3 · 互补品类",
+          "tone": "accent"
+        },
+        "right": {
+          "chip": "SUBSTITUTION",
+          "chip_en": "替代 / 无效应",
+          "title": "服装 / 鞋包 / 母婴：补不回来",
+          "body": "偏好稳定、可即时决策的品类，推荐位本身就是决策终点。",
+          "items": [
+            "服装：推荐 −91%，搜索 +9%",
+            "鞋 / 包：推荐 −94%，搜索 0%（0.0243 n.s.）",
+            "母婴：推荐 −95%，搜索 0%（0.0281 n.s.）"
+          ],
+          "footer": "Table 4 · 替代与无效应品类",
+          "tone": "danger"
+        }
+      }
+    },
+    {
+      "layout": "concept_flow",
+      "kicker": "07 · FRAMEWORK",
+      "title": "概念框架：推荐先形成考虑集，搜索再满足需求",
+      "subtitle": "互补与替代，差在推荐是否把用户推向搜索",
+      "data": {
+        "left": {
+          "title": "推荐 · 形成阶段",
+          "body": "推荐位压缩搜索成本，把候选商品摆到用户面前。",
+          "items": [
+            "个性化越强，越接近用户偏好",
+            "禁用个人数据 → 只能推大众爆款"
+          ]
+        },
+        "center": {
+          "label": "⇄",
+          "note": "update"
+        },
+        "right": {
+          "title": "搜索 · 满足阶段",
+          "body": "用户用查询把需求显性化，搜索承担深度比较。",
+          "items": [
+            "互补品类：推荐把用户送进搜索",
+            "替代品类：推荐直接终结决策"
+          ]
+        },
+        "takeaway": "推荐不是在替搜索，而是在决定用户是否需要搜索 —— 取决于品类的决策链路长度"
+      }
+    },
+    {
+      "layout": "matrix2x2",
+      "kicker": "08 · MECHANISM",
+      "title": "2×2 机制矩阵：兴趣与品类共同决定补偿强度",
+      "subtitle": "消费者兴趣 × 品类关系",
+      "data": {
+        "aside": {
+          "title": "两个维度",
+          "body": "用历史行为刻画兴趣高低，用品类回归结果区分互补与替代。",
+          "items": [
+            "横轴：兴趣爱好强度",
+            "纵轴：互补 / 替代",
+            "读数：推荐与搜索的 PV 变化"
+          ],
+          "axes": {
+            "x": "兴趣 低 → 高",
+            "y": "替代 → 互补"
+          }
+        },
+        "quadrants": [
+          {
+            "no": "LT",
+            "title": "互补 · 低兴趣",
+            "condition": "推荐 +369%",
+            "result": "搜索 +30%",
+            "note": "N = 1,057,396 · 补偿最强",
+            "tone": "accent"
+          },
+          {
+            "no": "RT",
+            "title": "互补 · 高兴趣",
+            "condition": "推荐 +48%",
+            "result": "搜索 +12%",
+            "note": "N = 54,204 · 用户已知道自己要什么",
+            "tone": "tint"
+          },
+          {
+            "no": "LB",
+            "title": "替代 · 低兴趣",
+            "condition": "推荐 −91%",
+            "result": "搜索 0%（−0.00510 n.s.）",
+            "note": "N = 12,837,604 · 完全不补",
+            "tone": "danger"
+          },
+          {
+            "no": "RB",
+            "title": "替代 · 高兴趣",
+            "condition": "推荐 −92%",
+            "result": "搜索 +10%",
+            "note": "N = 501,596 · 补一点点",
+            "tone": "alert"
+          }
+        ],
+        "center_label": "PV"
+      }
+    },
+    {
+      "layout": "chart_insight",
+      "kicker": "09 · EVIDENCE",
+      "title": "NLP 搜索词证据：搜索行为确实变了",
+      "subtitle": "搜索词的通用性与长度，按四象限拆解（%）",
+      "hero": false,
+      "data": {
+        "side_ratio": 0.62,
+        "chart": {
+          "type": "bar",
+          "title": "搜索查询特征变化",
+          "categories": [
+            "互补·高兴趣",
+            "互补·低兴趣",
+            "替代·高兴趣",
+            "替代·低兴趣"
+          ],
+          "series": [
+            {
+              "name": "通用词占比",
+              "values": [
+                19,
+                13,
+                3,
+                8
+              ],
+              "color": "navy"
+            },
+            {
+              "name": "查询长度",
+              "values": [
+                2,
+                0,
+                4,
+                1
+              ],
+              "color": "teal"
+            }
+          ],
+          "unit": "%",
+          "height": 400,
+          "note": "互补品类搜索更泛化（0.0337***、0.0238***），替代品类搜索更具体（0.115***）"
+        },
+        "cards": [
+          {
+            "title": "互补：搜索变“宽”",
+            "body": "通用词占比 +19% / +13%，用户在推荐启发的方向上开阔搜索。",
+            "tone": "tint"
+          },
+          {
+            "title": "替代：搜索变“窄”",
+            "body": "查询长度 +4%、+1%，用户是在核价与确认，而非发现新品。",
+            "tone": "plain"
+          }
+        ],
+        "takeaway": {
+          "label": "解读",
+          "text": "搜索词结构变化说明：补偿不是同一种行为，互补是发现、替代是确认"
+        }
+      }
+    },
+    {
+      "layout": "data_table",
+      "kicker": "APPENDIX · A1",
+      "title": "附录：主效应与补偿比例完整表",
+      "subtitle": "可追溯到论文 Table 1 / Table 2",
+      "data": {
+        "columns": [
+          "指标",
+          "推荐渠道",
+          "搜索渠道",
+          "补偿比例"
+        ],
+        "rows": [
+          [
+            "浏览 PV",
+            "−33.4%（−39.03***）",
+            "+7.1%（+8.532***）",
+            "22%"
+          ],
+          [
+            "点击 Click",
+            "−83.6%（−4.416***）",
+            "+6.3%（+0.310***）",
+            "7%"
+          ],
+          [
+            "订单 Order",
+            "−85.9%（−0.019***）",
+            "+7.1%（+0.0075***）",
+            "—"
+          ],
+          [
+            "销售额 GMV",
+            "−81.1%（−1.106***）",
+            "+6.4%（+0.584*）",
+            "52.8%"
+          ]
+        ],
+        "caption": "N = 555,800；*** p<0.01，* p<0.1；括号内为系数估计",
+        "highlight_col": 3,
+        "first_col_bold": true
+      }
+    },
+    {
+      "layout": "key_findings",
+      "kicker": "10 · FINDINGS",
+      "title": "关键发现与启示",
+      "subtitle": "推荐抑制个人数据后：平台损失了什么，用户得到了什么",
+      "data": {
+        "banner": {
+          "heading": "三个必须记住的数字",
+          "figures": [
+            {
+              "value": "−33.4%",
+              "unit": "",
+              "label": "推荐渠道浏览 PV",
+              "tone": "down"
+            },
+            {
+              "value": "+7.1%",
+              "unit": "",
+              "label": "搜索渠道浏览 PV",
+              "tone": "up"
+            },
+            {
+              "value": "22%",
+              "unit": "",
+              "label": "搜索对推荐的补偿比例",
+              "tone": "flat"
+            }
+          ]
+        },
+        "cards": [
+          {
+            "title": "对平台：隐私保护有代价，但代价因品类而异",
+            "body": "整体补偿只有 22%，但在互补品类里搜索能补回三成，替代品类几乎为零。",
+            "tone": "plain"
+          },
+          {
+            "title": "对研究：替代与互补是品类属性，不是平台属性",
+            "body": "同一实验、同一算法改动，26 个品类分成两极；用平台层面均值讨论隐私成本会失真。",
+            "tone": "tint"
+          },
+          {
+            "title": "下一步：把品类机制做成可预测的指标",
+            "body": "决策链路长度、复购周期、SKU 丰富度能否提前预测补偿强度，是值得跟进的方向。",
+            "tone": "primary"
+          }
+        ],
+        "cards_ratio": 0.36
+      }
+    },
+    {
+      "layout": "closing",
+      "kicker": "11 · CONCLUSION",
+      "title": "总结与展望",
+      "data": {
+        "quote": {
+          "text": "切断个人数据不会让用户停止购物，但会让他们换个方式找东西 —— 而这个“方式”由品类决定。",
+          "source": "Yuan, Chen, Wang & Sun (2025), ISR 36(1): 84-106"
+        },
+        "panels": [
+          {
+            "title": "局限",
+            "body": "单一平台、单一算法、一个常规日；GMV 的搜索系数仅 10% 水平显著。",
+            "tone": "plain"
+          },
+          {
+            "title": "未来",
+            "body": "跨平台复现、把兴趣刻画换成实时行为序列、检验长期推荐多样性对搜索的影响。",
+            "tone": "primary"
+          }
+        ],
+        "thanks": "感谢聆听 · 欢迎批评指正"
+      }
+    }
+  ]
+}

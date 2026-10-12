@@ -1,0 +1,29 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Generated output (keep the repo light: regenerate with `deepocean build`)
+examples/out/
+out/
+*.pptx
+*.pdf
+!assets/*.pdf
+*.png
+!assets/*.png
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

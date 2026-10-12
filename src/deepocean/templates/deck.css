@@ -1,0 +1,558 @@
+@charset "UTF-8";
+/* =====================================================================
+   Deep Ocean · HTML preview + print stylesheet
+   ---------------------------------------------------------------------
+   This file is the stylesheet behind ``deepocean.html.render``.  It is a
+   *template*: the line marked ``DO_TOKENS`` is replaced at render time by
+   ``tokens.css_variables()``, so every colour and every type size below
+   comes from the design tokens — the CSS can never drift from the guide.
+
+   Coordinate system: the same 1280 x 720 px canvas the PPTX renderer uses.
+   Bands: top bar y 0-60 · title y 72-140 · content y 200-640 ·
+   footer y 680-720 · side margins 40 · gutter 20.
+   ===================================================================== */
+
+/* DO_TOKENS */
+/* DO_FONTS */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body.do-body {
+  margin: 0;
+  padding: 0;
+  background: #EEF1F5;                     /* neutral preview backdrop */
+  color: var(--do-t1);
+  font-family: var(--do-font-cjk);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ---------------------------------------------------------------- chrome */
+
+.do-toolbar {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 20;
+  height: 36px; display: flex; align-items: center; gap: 16px;
+  padding: 0 18px;
+  background: var(--do-navy); color: #FFFFFF;
+  font-size: 12px; line-height: 1; letter-spacing: .3px;
+}
+.do-toolbar .do-toolbar-brand { font-weight: 700; letter-spacing: 2.5px; color: var(--do-teal); }
+.do-toolbar .do-toolbar-meta { color: #C9D6E4; }
+.do-toolbar .do-toolbar-hint { margin-left: auto; color: #C9D6E4; }
+
+.do-deck { padding: 56px 0 40px; }
+
+.do-page {
+  position: relative;
+  width: 1280px; height: 720px;
+  margin: 0 auto 26px;
+  background: var(--do-white);
+  color: var(--do-t1);
+  font-family: var(--do-font-cjk);
+  overflow: hidden;
+  box-shadow: 0 2px 18px rgba(27, 58, 92, .14);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.do-page:last-child { margin-bottom: 0; }
+
+.do-empty { margin: 40px auto; text-align: center; color: var(--do-t3); font-size: 14px; }
+
+/* responsive preview: CSS-only, no scripts, no external assets */
+@media screen and (max-width: 1439px) { .do-page { zoom: .88; } }
+@media screen and (max-width: 1199px) { .do-page { zoom: .72; } }
+@media screen and (max-width: 999px)  { .do-page { zoom: .56; } }
+@media screen and (max-width: 819px)  { .do-page { zoom: .42; } }
+
+/* ------------------------------------------------------------------ band A */
+
+.do-topbar {
+  position: absolute; left: 0; top: 0; width: 1280px; height: 60px;
+  background: var(--do-navy);
+}
+.do-topbar.is-tall { height: 100px; }
+.do-topbar .do-mark {
+  position: absolute; left: 32px; top: 26px; width: 8px; height: 8px;
+  background: var(--do-teal);
+}
+.do-topbar.is-tall .do-mark { top: 22px; }
+.do-topbar .do-series {
+  position: absolute; right: 24px; top: 20px;
+  font-size: 13px; line-height: 1.4; color: #FFFFFF; letter-spacing: .6px;
+}
+
+/* ------------------------------------------------------------------ band B */
+
+.do-titleblock { position: absolute; left: 40px; top: 72px; width: 1200px; }
+.do-kicker {
+  position: absolute; left: 0; top: 8px; margin: 0;
+  font-size: var(--do-kicker); font-weight: 700; letter-spacing: 2.5px;
+  line-height: 1.4; color: var(--do-teal);
+}
+.do-title {
+  position: absolute; left: 0; top: 30px; margin: 0; width: 1200px;
+  font-size: var(--do-page_title); font-weight: 700; line-height: 1.25;
+  color: var(--do-navy);
+}
+.do-title.is-long  { font-size: 26px; }
+.do-title.is-xlong { font-size: 23px; }
+.do-subtitle {
+  position: absolute; left: 0; top: 70px; margin: 0; width: 1100px;
+  font-size: var(--do-page_subtitle); line-height: 1.45; color: var(--do-grayblue);
+}
+
+/* ------------------------------------------------------------------ band D */
+
+.do-footer {
+  position: absolute; left: 0; top: 680px; width: 1280px; height: 40px;
+  border-top: 1px solid var(--do-line);
+}
+.do-footer-note {
+  position: absolute; left: 40px; top: 12px; max-width: 1000px;
+  font-size: var(--do-footer); line-height: 1.4; color: var(--do-t3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.do-page-number {
+  position: absolute; right: 40px; top: 11px;
+  font-size: var(--do-page_number); font-weight: 700; line-height: 1.4;
+  color: var(--do-navy); letter-spacing: .5px;
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.do-card {
+  position: absolute;
+  display: flex; flex-direction: column;
+  padding: 18px 20px;                     /* CARD_PAD md = (18, 20, 18, 20) */
+  background: var(--do-white);
+  border: 1px solid var(--do-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.do-card.is-pad-sm { padding: 14px 16px; }
+.do-card.is-pad-lg { padding: 24px 28px 20px; }
+.do-card.is-radius-sm { border-radius: 6px; }
+.do-card.is-step { justify-content: center; align-items: center; text-align: center; }
+
+.do-card.has-accent-left::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+  background: var(--do-accent, var(--do-teal));
+}
+.do-card.has-accent-top::before {
+  content: ""; position: absolute; left: 0; top: 0; right: 0; height: 5px;
+  background: var(--do-accent, var(--do-teal));
+}
+.do-card.has-accent-left { padding-left: 22px; }
+
+/* Surface tones follow components._TONE_STYLES: only `plain` keeps a hairline. */
+.do-tone-plain   { background: var(--do-white); border-color: var(--do-line); }
+.do-tone-tint    { background: var(--do-light); border-color: transparent; }
+.do-tone-accent  { background: var(--do-mint);  border-color: transparent; }
+.do-tone-neutral { background: var(--do-light); border-color: transparent; }
+.do-tone-danger  { background: var(--do-pink);  border-color: transparent; }
+.do-tone-alert   { background: var(--do-pink);  border-color: transparent; }
+.do-tone-primary { background: var(--do-navy);  border-color: transparent; }
+
+.do-card.has-border-accent { border-color: var(--do-accent, var(--do-teal)); border-width: 2px; }
+
+/* dark (navy) card: white title, light body, muted caption */
+.do-tone-primary .do-card-title,
+.do-tone-primary .do-kpi-value,
+.do-tone-primary .do-lead { color: #FFFFFF; }
+.do-tone-primary .do-body,
+.do-tone-primary .do-items li { color: #C9D6E4; }
+.do-tone-primary .do-items li::before { background: var(--do-teal); }
+.do-tone-primary .do-label,
+.do-tone-primary .do-card-foot { color: #B9C8DA; }
+.do-tone-primary .do-chip { background: rgba(46, 155, 166, .22); color: #FFFFFF; }
+
+/* ------------------------------------------------------------ card innards */
+
+.do-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.do-card-head:last-child { margin-bottom: 0; }
+.do-chip {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  background: var(--do-mint); color: var(--do-navy);
+  font-size: 11px; font-weight: 700; letter-spacing: .6px; line-height: 1.6;
+  white-space: nowrap;
+}
+.do-chip.is-danger  { background: var(--do-pink); color: var(--do-brick); }
+.do-chip.is-neutral { background: var(--do-light); color: var(--do-grayblue); }
+.do-chip-en {
+  font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--do-t3); line-height: 1.6;
+}
+.do-card-title {
+  margin: 0 0 6px; font-size: var(--do-card_title); font-weight: 700;
+  line-height: 1.35; color: var(--do-navy);
+}
+.do-card-title.is-sm { font-size: var(--do-card_title_sm); }
+.do-card-title:last-child { margin-bottom: 0; }
+.do-label {
+  margin: 0 0 3px; font-size: var(--do-kpi_label); line-height: 1.4;
+  color: var(--do-grayblue); letter-spacing: .4px;
+}
+.do-body { margin: 0; font-size: var(--do-card_body); line-height: 1.58; color: var(--do-t2); }
+.do-body p { margin: 0 0 6px; }
+.do-body p:last-child { margin-bottom: 0; }
+.do-body.is-sm { font-size: var(--do-card_body_sm); line-height: 1.55; }
+
+.do-items { list-style: none; margin: 6px 0 0; padding: 0; }
+.do-items li {
+  position: relative; padding-left: 14px; margin-bottom: 5px;
+  font-size: var(--do-card_body); line-height: 1.55; color: var(--do-t2);
+}
+.do-items li::before {
+  content: ""; position: absolute; left: 0; top: .52em;
+  width: 6px; height: 6px; border-radius: 2px; background: var(--do-teal);
+}
+.do-items li:last-child { margin-bottom: 0; }
+.do-items.is-tight li { font-size: var(--do-card_body_sm); margin-bottom: 3px; }
+.do-items.is-plain li { padding-left: 0; }
+.do-items.is-plain li::before { content: none; }
+.do-lead { font-weight: 700; color: var(--do-t1); }
+.do-card-foot {
+  margin-top: auto; padding-top: 8px;
+  font-size: var(--do-caption); line-height: 1.45; color: var(--do-t3);
+}
+
+/* -------------------------------------------------------------------- KPI */
+
+.do-kpi { display: flex; flex-direction: column; }
+.do-kpi-value {
+  margin: 0; font-size: var(--do-kpi_value); font-weight: 700; line-height: 1.05;
+  color: var(--do-navy); letter-spacing: -.5px;
+}
+.do-kpi-value.is-xs { font-size: 26px; }
+.do-kpi-value.is-sm { font-size: var(--do-kpi_value_sm); }
+.do-kpi-value.is-md { font-size: var(--do-section_number); }
+.do-kpi-value.is-lg { font-size: var(--do-section_number_lg); }
+.do-unit { font-size: .5em; font-weight: 700; margin-left: 2px; letter-spacing: 0; }
+.do-kpi-note { margin: 4px 0 0; font-size: var(--do-kpi_note); line-height: 1.45; color: var(--do-t2); }
+
+/* ------------------------------------------------------------------ cover */
+/* Geometry mirrors layouts.render_cover: headline column x=72 w=1100,
+   divider pinned at y=410, full-bleed info strip y 568-712, navy band 712. */
+
+.do-cover-rule {
+  position: absolute; left: 0; top: 120px; width: 6px; height: 480px;
+  background: var(--do-teal);
+}
+.do-cover-kicker {
+  position: absolute; left: 72px; top: 140px; width: 1100px; margin: 0;
+  font-size: var(--do-kicker); font-weight: 700; letter-spacing: 2.5px;
+  line-height: 1.1; color: var(--do-teal); text-transform: uppercase;
+}
+.do-cover-title {
+  position: absolute; left: 72px; width: 1100px; margin: 0;
+  font-size: var(--do-cover_title); font-weight: 700; line-height: 1.22;
+  color: var(--do-navy);
+}
+.do-cover-title.is-long  { font-size: 38px; }
+.do-cover-title.is-xlong { font-size: 33px; }
+.do-cover-en {
+  position: absolute; left: 72px; width: 1100px; margin: 0;
+  font-size: var(--do-cover_subtitle); line-height: 1.3; color: var(--do-t1);
+}
+.do-cover-divider {
+  position: absolute; left: 72px; top: 410px; width: 160px; height: 2px;
+  background: var(--do-teal);
+}
+.do-cover-authors {
+  position: absolute; left: 72px; width: 1100px; margin: 0;
+  font-size: 15px; line-height: 1.3; color: var(--do-grayblue);
+}
+.do-cover-meta {
+  position: absolute; left: 72px; width: 1100px; margin: 0;
+  font-size: var(--do-cover_meta); line-height: 1.3; color: var(--do-t3);
+}
+.do-cover-strip {
+  position: absolute; left: 0; top: 568px; width: 1280px; height: 144px;
+  background: var(--do-light);
+}
+.do-cover-stripbar {
+  position: absolute; left: 0; top: 568px; width: 8px; height: 144px;
+  background: var(--do-navy);
+}
+.do-cover-note {
+  position: absolute; left: 72px; top: 598px; width: 1100px; margin: 0;
+  font-size: var(--do-card_body); line-height: 1.4; color: var(--do-t2);
+}
+.do-cover-pagenum {
+  position: absolute; left: 72px; top: 636px; margin: 0;
+  font-size: var(--do-caption); line-height: 1.2; color: var(--do-t3);
+}
+.do-cover-band {
+  position: absolute; left: 72px; top: 660px; margin: 0;
+  font-size: var(--do-caption); line-height: 1.2; color: var(--do-t3);
+}
+.do-cover-bottom {
+  position: absolute; left: 0; top: 712px; width: 1280px; height: 8px;
+  background: var(--do-navy);
+}
+
+/* ----------------------------------------------------------------- closing */
+/* Geometry mirrors layouts.render_closing: 100px bar, quote 140/190,
+   panels y=350 h=270 (first 560), thanks strip 648/32, navy band 712. */
+
+.do-close-title {
+  position: absolute; left: 40px; top: 26px; width: 900px; margin: 0;
+  font-size: var(--do-card_title); font-weight: 700; line-height: 1.3;
+  color: #FFFFFF;
+}
+.do-close-series {
+  position: absolute; right: 40px; top: 30px;
+  font-size: 13px; line-height: 1.4; color: #FFFFFF;
+}
+.do-close-rule {
+  position: absolute; left: 0; top: 100px; width: 6px; height: 380px;
+  background: var(--do-teal);
+}
+.do-quote {
+  position: absolute; left: 40px; top: 140px; width: 1200px; height: 190px;
+  padding: 24px 28px 22px 34px;
+  border-left: 6px solid var(--do-teal);
+  border-radius: 0 8px 8px 0; background: var(--do-mint); overflow: hidden;
+}
+.do-quote-text {
+  margin: 0; font-size: var(--do-quote); font-weight: 700; line-height: 1.4;
+  color: var(--do-navy);
+}
+.do-quote-src {
+  position: absolute; left: 34px; bottom: 18px;
+  margin: 0; font-size: var(--do-caption); line-height: 1.1; color: var(--do-t3);
+}
+.do-thanks {
+  position: absolute; left: 40px; top: 648px; width: 1200px; height: 32px;
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  background: var(--do-mint); border-radius: 0;
+  font-size: var(--do-card_body); line-height: 1; color: var(--do-navy);
+  overflow: hidden;
+}
+.do-thanks .do-thanks-label {
+  flex: 0 0 auto; font-size: var(--do-caption); font-weight: 700;
+  letter-spacing: .5px; color: var(--do-grayblue);
+}
+.do-close-band {
+  position: absolute; left: 0; top: 712px; width: 1280px; height: 8px;
+  background: var(--do-navy);
+}
+
+/* --------------------------------------------------------- flow / roadmap */
+
+.do-step-no {
+  position: absolute; width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--do-navy); color: #FFFFFF;
+  font-size: 17px; font-weight: 700; line-height: 1.05;
+}
+.do-step-no.is-accent { background: var(--do-teal); }
+.do-flow-arrow { position: absolute; height: 8px; }
+.do-flow-arrow::before {
+  content: ""; position: absolute; left: 0; right: 4px; top: 3px; height: 2px;
+  background: var(--do-teal);
+}
+.do-flow-arrow::after {
+  content: ""; position: absolute; right: 0; top: 0;
+  border-left: 5px solid var(--do-teal);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+}
+.do-vs {
+  position: absolute; border-radius: 50%; background: var(--do-navy);
+  color: #FFFFFF; display: flex; align-items: center; justify-content: center;
+  font-size: var(--do-card_body); font-weight: 700; line-height: 1.05;
+}
+.do-flow-line { position: absolute; height: 2px; background: var(--do-teal); }
+.do-center-arrow { position: absolute; height: 8px; }
+.do-center-arrow::before {
+  content: ""; position: absolute; left: 0; right: 4px; top: 3px; height: 2px;
+  background: var(--do-teal);
+}
+.do-center-arrow::after {
+  content: ""; position: absolute; right: 0; top: 0;
+  border-left: 5px solid var(--do-teal);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+}
+.do-center-label {
+  position: absolute; text-align: center;
+  font-size: var(--do-card_title_sm); font-weight: 700; line-height: 1.15;
+  color: var(--do-navy);
+}
+.do-center-note {
+  position: absolute; text-align: center;
+  font-size: var(--do-caption); line-height: 1.1; color: var(--do-t3);
+}
+.do-verdict {
+  position: absolute; left: 40px; width: 1200px;
+  padding: 8px 18px; border-radius: 8px;
+  background: var(--do-mint);
+  font-size: 13.5px; line-height: 1.5; color: var(--do-navy); overflow: hidden;
+}
+.do-verdict p { margin: 0 0 4px; }
+.do-verdict p:last-child { margin-bottom: 0; }
+
+/* ----------------------------------------------------------------- matrix */
+
+.do-quad {
+  position: absolute; display: flex; flex-direction: column;
+  padding: 14px 16px 12px; border: 2px solid var(--do-line);
+  border-radius: 8px; overflow: hidden;
+}
+/* Quadrant innards (components.matrix_grid: no 17px teal + title 15px ink) */
+.do-quad-no {
+  display: inline; margin-right: 6px;
+  font-size: 17px; font-weight: 700; line-height: 1.2; color: var(--do-teal);
+}
+.do-quad-title {
+  margin: 0 0 5px; font-size: 15px; font-weight: 700;
+  line-height: 1.2; color: var(--do-navy);
+}
+.do-quad-line { font-size: 13px; line-height: 1.45; color: var(--do-t2); }
+.do-quad-line .do-quad-mark { color: var(--do-teal); font-weight: 700; }
+.do-quad-line.is-result { color: var(--do-t1); }
+.do-tone-primary .do-quad-title,
+.do-tone-primary .do-quad-no { color: #FFFFFF; }
+.do-quad-note {
+  margin-top: auto; padding-top: 6px; font-size: 11px; font-style: italic;
+  line-height: 1.4; color: var(--do-t3);
+}
+.do-matrix-dot {
+  position: absolute; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--do-navy);
+}
+.do-matrix-center {
+  position: absolute; padding: 1px 8px; border-radius: 999px;
+  background: var(--do-white); border: 1px solid var(--do-line);
+  font-size: 11px; font-weight: 700; line-height: 1.6; color: var(--do-navy);
+  white-space: nowrap;
+}
+.do-axis-x {
+  position: absolute; font-size: 11.5px; letter-spacing: .5px;
+  color: var(--do-grayblue); white-space: nowrap;
+}
+.do-axis-y {
+  position: absolute; font-size: 11.5px; letter-spacing: .5px;
+  color: var(--do-grayblue); white-space: nowrap;
+  transform: rotate(-90deg); transform-origin: left top;
+}
+
+/* ------------------------------------------------------------------ table */
+
+/* The table is drawn straight on the canvas (no card frame), like
+   layouts.render_data_table: 42px head, 44-52px rows, caption underneath. */
+.do-table-wrap { position: absolute; overflow: hidden; }
+.do-table {
+  width: 100%; border-collapse: collapse; table-layout: fixed;
+  font-size: var(--do-table_cell); color: var(--do-t2);
+  font-variant-numeric: tabular-nums;
+}
+.do-table.is-airy th { padding: 11px 10px; }
+.do-table.is-airy td { padding: 12px 10px; }
+.do-table.is-dense { font-size: 12px; }
+.do-table.is-tight { font-size: 11.2px; }
+.do-table th {
+  padding: 8px 12px; background: var(--do-navy); color: #FFFFFF;
+  font-size: var(--do-table_head); font-weight: 700; text-align: left;
+  line-height: 1.35; border: 1px solid var(--do-navy);
+}
+.do-table td {
+  padding: 7px 12px; border: 1px solid var(--do-line);
+  line-height: 1.4; vertical-align: top; word-break: break-word;
+}
+.do-table td.is-center, .do-table th.is-center { text-align: center; }
+.do-table tbody tr:nth-child(even) td { background: var(--do-light); }
+.do-table tbody tr td.is-first { font-weight: 700; color: var(--do-t1); }
+.do-table tbody tr td.is-num { text-align: right; }
+.do-table tbody tr td.is-hl,
+.do-table tbody tr:nth-child(even) td.is-hl { background: var(--do-mint); }
+.do-table tbody tr td.is-hl-neg,
+.do-table tbody tr:nth-child(even) td.is-hl-neg { background: var(--do-pink); }
+.do-table-caption {
+  margin: 8px 2px 0; font-size: var(--do-caption); line-height: 1.45;
+  color: var(--do-t3); text-align: right;
+}
+
+/* ---------------------------------------------------------- key findings */
+
+.do-banner {
+  position: absolute; left: 40px; display: flex; align-items: center; gap: 20px;
+  padding: 14px 22px; background: var(--do-navy); border-radius: 8px;
+  overflow: hidden;
+}
+.do-banner-head {
+  flex: 0 0 300px; margin: 0; font-size: var(--do-card_title);
+  font-weight: 700; line-height: 1.3; color: #FFFFFF;
+}
+.do-banner-kicker {
+  display: block; margin-bottom: 4px;
+  font-size: var(--do-kicker); font-weight: 700; letter-spacing: 2.5px;
+  color: var(--do-teal);
+}
+.do-banner-figs { display: flex; flex: 1 1 auto; gap: 18px; min-width: 0; }
+.do-fig { flex: 1 1 0; min-width: 0; }
+.do-fig-value {
+  margin: 0; font-size: var(--do-kpi_value); font-weight: 700;
+  line-height: 1.05; color: var(--do-teal);
+}
+.do-fig-unit { font-size: .5em; font-weight: 700; margin-left: 2px; }
+.do-fig-label {
+  margin: 3px 0 0; font-size: var(--do-kpi_label); line-height: 1.4;
+  color: #B9C8DA;
+}
+/* On a navy banner the number colours must stay legible: the paper palette
+   teal (3.5:1) and pink tint carry the up/down semantics, navy becomes white. */
+.do-banner .do-fig-value.do-u-navy     { color: #FFFFFF; }
+.do-banner .do-fig-value.do-u-brick    { color: var(--do-pink); }
+.do-banner .do-fig-value.do-u-grayblue { color: #C9D6E4; }
+
+/* -------------------------------------------------------- colour utilities */
+/* Kept last on purpose: these semantic number colours must win over the
+   surface defaults of .do-kpi-value / .do-fig-value regardless of source order. */
+
+.do-u-navy     { color: var(--do-navy); }
+.do-u-teal     { color: var(--do-teal); }
+.do-u-brick    { color: var(--do-brick); }
+.do-u-grayblue { color: var(--do-grayblue); }
+
+/* ------------------------------------------------------------------ chart */
+
+.do-chart-wrap { position: absolute; overflow: hidden; }
+.do-chart { display: block; font-family: inherit; }
+.do-chart text { font-family: inherit; }
+.do-chart .do-axis  { stroke: var(--do-grayblue); stroke-width: 1; }
+.do-chart .do-grid  { stroke: var(--do-line); stroke-width: 1; }
+.do-chart .do-val   { font-size: 11px; font-weight: 700; fill: var(--do-t1); }
+.do-chart .do-val.is-sm { font-size: 10px; }
+.do-chart .do-cat   { font-size: 11.5px; fill: var(--do-grayblue); }
+.do-chart .do-tick  { font-size: 11px; fill: var(--do-grayblue); }
+.do-chart .do-legend { font-size: 11.5px; fill: var(--do-t2); }
+.do-chart .do-center-v { font-size: 22px; font-weight: 700; fill: var(--do-navy); }
+.do-chart .do-center-l { font-size: 11px; fill: var(--do-grayblue); }
+.do-chart .do-line  { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.do-chart .do-point { fill: var(--do-white); stroke-width: 2; }
+.do-chart-empty { fill: var(--do-light); stroke: var(--do-line); stroke-dasharray: 4 4; }
+
+/* ------------------------------------------------------------------ print */
+
+@media print {
+  @page { size: 1280px 720px; margin: 0; }
+
+  html, body.do-body { background: #FFFFFF; }
+  .do-toolbar { display: none; }
+  .do-deck { padding: 0; }
+  .do-page {
+    zoom: 1;
+    margin: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .do-page:last-child { break-after: auto; page-break-after: auto; }
+  .do-card { box-shadow: none; }
+}

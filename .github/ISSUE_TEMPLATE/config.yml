@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 先读设计规范
+    url: https://github.com/wst320727254-beep/deep-ocean-slides/blob/main/docs/STYLE.md
+    about: 颜色、字号、边距、版式的权威定义都在这里；很多"bug"其实是规范本身。
+  - name: 版式字段速查
+    url: https://github.com/wst320727254-beep/deep-ocean-slides/blob/main/docs/STYLE.md#版式库
+    about: 12 个版式各自需要哪些字段，以及如何新增一个版式。
