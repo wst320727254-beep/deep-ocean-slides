@@ -408,7 +408,23 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _force_utf8_output() -> None:
+    """Make Chinese output safe on Windows consoles.
+
+    A stock Windows CI runner (or a ``cmd.exe`` window with cp1252/cp936) raises
+    ``UnicodeEncodeError`` the moment a Chinese path or status line is printed.
+    Reconfiguring the streams keeps the CLI usable everywhere; ``errors`` keeps
+    it from crashing even when the terminal cannot render a glyph at all.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):  # pragma: no cover - redirected / exotic streams
+            pass
+
+
 def main(argv: Optional[List[str]] = None) -> int:
+    _force_utf8_output()
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):

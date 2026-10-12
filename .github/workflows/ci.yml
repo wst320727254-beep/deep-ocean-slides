@@ -6,6 +6,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# The CLI and the linter print Chinese; force UTF-8 so Windows runners do not
+# fall back to cp1252 (the CLI also reconfigures its own streams).
+env:
+  PYTHONIOENCODING: utf-8
+
 jobs:
   test:
     name: ${{ matrix.os }} · py${{ matrix.python }}
