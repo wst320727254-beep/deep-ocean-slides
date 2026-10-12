@@ -1,4 +1,4 @@
-﻿# Deep Ocean Slides · 深海学术风幻灯片
+# Deep Ocean Slides · 深海学术风幻灯片
 
 > **像论文，不像海报。** — 把一套打磨好的学术风 16:9 PPT 设计规范，变成可执行、可检查、可复用的代码。
 
@@ -54,6 +54,30 @@ pip install -e ".[yaml,paper]"   # paper 只在你直接用 PDF 出初稿时才�
 ```
 
 依赖只有 `python-pptx` 与 `Pillow`，Python 3.9+。
+
+## 给朋友用（三步）
+
+```bash
+# 1. 安装（Python 3.9+，一条命令）
+pip install "deep-ocean-slides[yaml,paper] @ git+https://github.com/wst320727254-beep/deep-ocean-slides.git"
+
+# 2. 配置自己的模型 key（不配也能用：退回离线骨架，只是不改写中文叙事）
+#    Windows PowerShell:
+[Environment]::SetEnvironmentVariable('DEEPSEEK_API_KEY','sk-你的key','User')
+#    macOS / Linux:  export DEEPSEEK_API_KEY=sk-你的key
+
+# 3. 一篇论文出成品
+deepocean from-paper "论文.pdf" --llm --journal "ISR · 2025" --max-figures 1 --build
+deepocean check "论文.deck.yaml" --strict       # 必须 0 error / 0 warn
+deepocean html  "论文.deck.yaml" -o "论文.html"  # 可选：网页版，Ctrl+P 导 PDF
+```
+
+**用 AI agent 的话（Claude Code / Codex / DSH 等）**：把仓库里的
+[`skills/deep-ocean-slides/`](skills/deep-ocean-slides/SKILL.md) 放进你的 skills 目录，
+agent 会按 `SKILL.md` 的四步流程执行，并遵守里面的质量闸门（"必须逐页渲染看图"、
+"数字必须带页码"、"配图 ≤ 2 页"、"不编造"）。不装 agent skill 也能用——命令行本身就是完整流程。
+
+> API key 属于每个使用者自己：不要共用、不要提交进仓库。本仓库全程不读写 key 文件。
 
 ## 60 秒上手
 
