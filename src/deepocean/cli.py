@@ -118,6 +118,24 @@ def cmd_from_paper(args: argparse.Namespace) -> int:
     return report
 
 
+def cmd_normalize(args: argparse.Namespace) -> int:
+    """离线修复 deck 的结构毛病（不联网、不调用模型、不改文字）。"""
+    from . import repair
+
+    if not os.path.exists(args.deck):
+        raise SystemExit(f"{PROG}: 找不到 {args.deck}")
+    result = repair.normalize_file(args.deck, args.out)
+    target = args.out or args.deck
+    if not result.changes:
+        print(f"✓ {target} 结构无需修复")
+        return EXIT_OK
+    print(f"✓ {target} 修复 {len(result.changes)} 处结构问题")
+    for change in result.changes:
+        print(f"  · {change}")
+    print("  下一步：deepocean check " + os.path.basename(target) + " --strict")
+    return _report_for(spec_mod.Deck.load(target), args, banner="修复后自检")
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     from . import build as build_mod
     from . import examples_data
@@ -449,6 +467,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--strict", action="store_true")
     p.add_argument("--no-color", action="store_true")
     p.set_defaults(func=cmd_from_paper)
+
+    p = sub.add_parser("normalize", help="离线修复 deck 的结构问题（不需要 API key）")
+    p.add_argument("deck")
+    p.add_argument("-o", "--out", help="输出文件（默认就地写回）")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--strict", action="store_true")
+    p.add_argument("--no-color", action="store_true")
+    p.set_defaults(func=cmd_normalize)
 
     p = sub.add_parser("demo", help="生成内置示例 deck")
     p.add_argument("-o", "--out")
