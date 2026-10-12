@@ -36,14 +36,71 @@ SECTION_PATTERNS: List[Tuple[str, str]] = [
     ("conclusion", r"(conclusion|limitation|future|结论|局限|展望)"),
 ]
 
-#: Numbers a quantitative deck usually needs.
+#: Numbers a quantitative deck usually needs.  The sign class covers the Unicode
+#: minus (U+2212) and en-dash that typeset papers use instead of "-".
 NUMBER_PATTERNS: List[Tuple[str, str]] = [
-    ("percent", r"[+-]?\d+(?:\.\d+)?\s?%"),
+    ("percent", r"[+\-−–]?\d+(?:\.\d+)?\s?%"),
     ("significance", r"p\s?[<>=]\s?0?\.\d+|p\s?<\s?0\.0\d|\*{1,3}"),
     ("sample", r"\bN\s?=\s?[\d,，]{3,}"),
-    ("coefficient", r"[+-]?\d+\.\d{2,4}(?!\d)"),
+    ("coefficient", r"[+\-−–]?\d+\.\d{2,4}(?!\d)"),
     ("count", r"\b\d{1,3}(?:,\d{3}){1,}\b"),
 ]
+
+#: Words that mark a number as an *effect* (a result) instead of a side fact.
+EFFECT_WORDS: Tuple[str, ...] = (
+    "increase", "decrease", "reduction", "reduce", "reduced", "higher", "lower",
+    "effect", "improve", "decline", "drop", "gain", "lift", "change", "boost",
+    "significant", "substitut", "complement", "elasticity",
+    "提升", "下降", "增加", "减少", "显著", "效应", "变化",
+)
+
+#: A line that is really a citation or a cross-reference, not a result.
+CITATION_RE = re.compile(
+    r"(et al\.|\(\d{4}[a-z]?\)|\bTable\s*\d|\bFigure\s*\d|\bAppendix\b|\bp\.?\s*\d{2,4}\b|\[\d+\])",
+    re.IGNORECASE)
+
+#: A line that looks like a bibliography entry ("Moore S, Dolansky M (2010) …").
+CITATION_LINE_RE = re.compile(
+    r"^(?:[A-Z][A-Za-z’'\-]+[ ,]){1,8}.{0,90}?\((?:19|20)\d{2}[a-z]?\)")
+
+#: Words that betray back matter even without a year.
+BACK_MATTER_WORDS = ("university", "journal of", "working paper", "ssrn", "doi:", "http",
+                     "proceedings", "springer", "elsevier", "informs", "academy of management")
+
+#: A page whose heading is the bibliography — its percentages are other people's.
+REFERENCE_PAGE_RE = re.compile(r"^\s*(references|bibliography|参考文献|reference list)\s*$",
+                               re.IGNORECASE | re.MULTILINE)
+
+
+def strip_bibliography(text: str, run: int = 3, hits: int = 2) -> str:
+    """Cut a section at the point where its trailing bibliography starts.
+
+    Reference lists sit *inside* the last section's page span, so their lines
+    were collected as body copy — which is how a slide ended up titled
+    "Moore S, Dolansky M, Singh M, Palmieri P, Alemi F (2010) The systems
+    thinking scale.".  A run of citation-shaped lines marks the boundary.
+    """
+    lines = text.splitlines()
+    window = max(2, min(run, 3))
+    for index in range(len(lines)):
+        chunk = [line for line in lines[index:index + window] if line.strip()]
+        if len(chunk) < window:
+            continue
+        shaped = sum(1 for line in chunk if is_citation_line(line))
+        if shaped >= max(1, min(hits, window - 1)):
+            return "\n".join(lines[:index])
+    return text
+
+
+def is_citation_line(line: str) -> bool:
+    """Bibliography-ish: author list + year, or a publisher/DOI stamp."""
+    clean = " ".join(str(line or "").split())
+    if len(clean) < 12:
+        return False
+    lowered = clean.lower()
+    if any(word in lowered for word in BACK_MATTER_WORDS):
+        return True
+    return bool(CITATION_LINE_RE.match(clean))
 
 #: Figures smaller than this are logos, rules or bullets, not evidence.
 MIN_FIGURE_PX = 180
@@ -96,13 +153,25 @@ class Section:
     text: str
 
     def bullets(self, limit: int = 5, width: int = 90) -> List[str]:
-        """Sentence-ish bullets, long enough to be useful, short enough to fit."""
+        """Sentence-ish bullets, long enough to be useful, short enough to fit.
+
+        Fragments that start mid-clause ("1 tests the…", "and the effect of")
+        are dropped: a draft that reads like broken OCR is worse than fewer
+        bullets, because the reader has to fix the sentence before using it.
+        """
         parts: List[str] = []
         for chunk in re.split(r"(?<=[。！？.!?])\s*", self.text):
             chunk = " ".join(chunk.split())
-            if len(chunk) < 12:
+            if len(chunk) < 24:
                 continue
-            parts.append(chunk if len(chunk) <= width else chunk[: width - 1] + "…")
+            head = chunk[0]
+            if head.isdigit() or (head.isalpha() and head.islower()):
+                continue
+            if chunk.count("(") != chunk.count(")"):
+                continue
+            if is_citation_line(chunk):
+                continue          # a reference, not a finding
+            parts.append(chunk if len(chunk) <= width else _clip(chunk, width))
             if len(parts) >= limit:
                 break
         return parts
@@ -134,12 +203,22 @@ class Digest:
     def text_of(self, *keys: str) -> str:
         return "\n".join(item.text for item in self.sections if item.key in keys)
 
-    def top_numbers(self, limit: int = 8) -> List[Dict[str, Any]]:
-        """The most slide-worthy numbers: percentages first, then samples."""
-        order = {"percent": 0, "significance": 1, "sample": 2, "coefficient": 3, "count": 4}
+    def top_numbers(self, limit: int = 8, min_score: Optional[int] = None) -> List[Dict[str, Any]]:
+        """The most slide-worthy numbers, best first.
+
+        Ordering is by *relevance* (see :func:`_score_number`), not by document
+        order: a percentage quoted in the literature review used to end up on the
+        results slide, which made the deck look wrong even though the number was
+        real.
+        """
+        kind_order = {"percent": 0, "significance": 1, "sample": 2, "coefficient": 3, "count": 4}
         seen: set = set()
         out: List[Dict[str, Any]] = []
-        for item in sorted(self.numbers, key=lambda n: order.get(n["kind"], 9)):
+        ranked = sorted(self.numbers,
+                        key=lambda n: (-int(n.get("score", 0)), kind_order.get(n["kind"], 9)))
+        for item in ranked:
+            if min_score is not None and int(item.get("score", 0)) < min_score:
+                continue
             key = (item["kind"], item["value"])
             if key in seen:
                 continue
@@ -251,10 +330,19 @@ def _match_section(line: str) -> Optional[Tuple[str, str]]:
     return None
 
 
-def _split_sections(pages: Sequence[str]) -> List[Section]:
+def _split_sections(pages: Sequence[str], skip_pages: Optional[set] = None) -> List[Section]:
+    """Split the body into sections, ignoring pages that are the bibliography.
+
+    Reference pages used to be swallowed by the last section, so bibliography
+    lines ("Moore S, Dolansky M. (2010) …") ended up as bullet points on the
+    results and findings slides.
+    """
+    skip_pages = skip_pages or set()
     sections: List[Section] = []
     current: Optional[Section] = None
     for number, text in enumerate(pages, 1):
+        if number in skip_pages:
+            continue
         for raw in text.splitlines():
             hit = _match_section(raw)
             if hit:
@@ -266,6 +354,8 @@ def _split_sections(pages: Sequence[str]) -> List[Section]:
                 current.text += raw + "\n"
     if current and current.text.strip():
         sections.append(current)
+    for item in sections:
+        item.text = strip_bibliography(item.text)
     # Keep the first occurrence of each key in document order.
     seen: set = set()
     unique: List[Section] = []
@@ -275,6 +365,41 @@ def _split_sections(pages: Sequence[str]) -> List[Section]:
         seen.add(item.key)
         unique.append(item)
     return unique
+
+
+def _clip(text: str, width: int) -> str:
+    """Cut on a word boundary, never mid-word (shared with the authoring step)."""
+    if len(text) <= width:
+        return text
+    window = text[:width]
+    for mark in (". ", ", ", "; ", " ", "，", "。"):
+        cut = window.rfind(mark)
+        if cut >= max(8, width // 2):
+            return window[:cut].rstrip(" ,;，、") + "…"
+    return window.rstrip() + "…"
+
+
+def clean_authors(raw: str) -> List[str]:
+    """Parse an ``/Author`` field, rejecting the mangled strings PDFs often carry.
+
+    Runner metadata is full of artefacts ("2Nev...", "Microsoft Word"), which
+    then land on the cover as if they were people.
+    """
+    if not raw:
+        return []
+    tokens = [token.strip(" .,;·") for token in re.split(r"[;,、]| and |&", raw)]
+    out: List[str] = []
+    for token in tokens:
+        if not 2 <= len(token) <= 40:
+            continue
+        if token[0].isdigit() or "@" in token:
+            continue
+        if re.search(r"(microsoft|word|latex|acrobat|pdf|untitled|administrator)", token, re.I):
+            continue
+        if re.search(r"\d[a-zA-Z]{2,}", token):        # "2Nev" style artefacts
+            continue
+        out.append(token)
+    return out[:8]
 
 
 def _tables(pages: Sequence[str], limit: int = 6) -> List[Dict[str, Any]]:
@@ -296,9 +421,62 @@ def _tables(pages: Sequence[str], limit: int = 6) -> List[Dict[str, Any]]:
     return tables
 
 
-def _numbers(pages: Sequence[str], limit: int = 60) -> List[Dict[str, Any]]:
+def _page_sections(sections: Sequence[Section], total_pages: int) -> Dict[int, List[str]]:
+    """Map every page to the section keys that cover it."""
+    spans: Dict[int, List[str]] = {}
+    for index, section in enumerate(sections):
+        start = section.page
+        end = (sections[index + 1].page - 1) if index + 1 < len(sections) else total_pages
+        for page in range(start, max(start, end) + 1):
+            spans.setdefault(page, []).append(section.key)
+    return spans
+
+
+def _reference_pages(pages: Sequence[str]) -> set:
+    """Pages that are the bibliography (their numbers belong to other papers)."""
+    out = set()
+    for number, text in enumerate(pages, 1):
+        if REFERENCE_PAGE_RE.search(text) or text.count("et al.") >= 8:
+            out.add(number)
+    return out
+
+
+def _score_number(kind: str, context: str, page: int,
+                  page_sections: Dict[int, List[str]]) -> int:
+    """How much a number looks like *this paper's result* rather than a stray figure."""
+    score = 0
+    keys = page_sections.get(page, [])
+    if any(key in ("results", "mechanism") for key in keys):
+        score += 3
+    elif any(key in ("discussion", "conclusion") for key in keys):
+        score += 2
+    elif any(key in ("method", "theory") for key in keys):
+        score += 1
+    lowered = context.lower()
+    if any(word in lowered for word in EFFECT_WORDS):
+        score += 2
+    if kind == "percent" and re.search(r"\*\*\*|p\s?<\s?0?\.0", lowered):
+        score += 2          # a starred percentage is a reported result, not trivia
+    if CITATION_RE.search(context):
+        score -= 2
+    if kind == "significance":
+        score += 1
+    elif kind == "sample":
+        score += 1
+    elif kind == "count":
+        score -= 1
+    return score
+
+
+def _numbers(pages: Sequence[str], limit: int = 60,
+             page_sections: Optional[Dict[int, List[str]]] = None,
+             skip_pages: Optional[set] = None) -> List[Dict[str, Any]]:
+    page_sections = page_sections or {}
+    skip_pages = skip_pages or set()
     out: List[Dict[str, Any]] = []
     for number, text in enumerate(pages, 1):
+        if number in skip_pages:
+            continue
         for line in text.splitlines():
             clean = " ".join(line.split())
             if len(clean) < 4:
@@ -315,6 +493,7 @@ def _numbers(pages: Sequence[str], limit: int = 60) -> List[Dict[str, Any]]:
                         "value": value,
                         "page": number,
                         "context": clean[:70] + ("…" if len(clean) > 70 else ""),
+                        "score": _score_number(kind, clean, number, page_sections),
                     })
                     if len(out) >= limit:
                         return out
@@ -466,22 +645,29 @@ def extract(path: str, figures_dir: Optional[str] = None) -> Digest:
         if not title:
             title = guess_title(pages[0])
     authors_raw = str(meta.get("/Author") or "")
-    authors = [a.strip() for a in re.split(r"[;,、]| and ", authors_raw) if a.strip()]
+    authors = clean_authors(authors_raw)
     year = ""
     match = re.search(r"(19|20)\d{2}", str(meta.get("/CreationDate") or "") + " " + (pages[0][:400] if pages else ""))
     if match:
         year = match.group(0)
 
+    reference_pages = _reference_pages(pages)
     digest = Digest(
         path=os.path.abspath(path),
         title=title,
         authors=authors,
         year=year,
         pages=len(pages),
-        sections=_split_sections(pages),
-        tables=_tables(pages),
-        numbers=_numbers(pages),
+        sections=_split_sections(pages, reference_pages),
     )
+    digest.numbers = _numbers(pages,
+                              page_sections=_page_sections(digest.sections, len(pages)),
+                              skip_pages=reference_pages)
+    digest.tables = _tables(pages)
+    if reference_pages:
+        digest.warnings.append(
+            f"已跳过 {len(reference_pages)} 页参考文献（第 {min(reference_pages)}–"
+            f"{max(reference_pages)} 页），避免他人文献的数字与作者名混进正文。")
     digest.figures, warnings = _figures(reader, figures_dir, pages)
     digest.warnings = warnings
 

@@ -38,6 +38,21 @@ DEFAULT_BASE_URL = "https://api.deepseek.com/v1"
 DEFAULT_MODEL = "deepseek-chat"
 API_KEY_ENV = ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "DEEP_OCEAN_API_KEY")
 
+#: Chinese card titles for the extracted section keys (the heading itself is
+#: usually "1. Introduction", which belongs in the English subtitle, not as a
+#: Chinese card title).
+SECTION_LABEL: Dict[str, str] = {
+    "abstract": "摘要要点",
+    "introduction": "引言要点",
+    "related": "相关工作",
+    "theory": "理论与假设",
+    "method": "方法与数据",
+    "results": "主要结果",
+    "mechanism": "机制检验",
+    "discussion": "讨论",
+    "conclusion": "结论与展望",
+}
+
 
 # --------------------------------------------------------------------------- #
 # helpers
@@ -88,12 +103,23 @@ def _usable_table(table: Dict[str, Any]) -> Optional[List[List[str]]]:
 
 
 def _percent_value(value: str) -> Optional[float]:
-    match = re.fullmatch(r"\s*([+-]?\d+(?:\.\d+)?)\s*%\s*", value)
-    return float(match.group(1)) if match else None
+    """``"-33.4%"`` / ``"−33.4 %"`` -> ``-33.4`` (typeset papers use U+2212)."""
+    match = re.fullmatch(r"\s*([+\-−–]?\d+(?:\.\d+)?)\s*%\s*", value)
+    if not match:
+        return None
+    return float(match.group(1).replace("−", "-").replace("–", "-"))
 
 
 def _bullets(section: Optional[Section], limit: int = 4, width: int = 88) -> List[str]:
     return section.bullets(limit=limit, width=width) if section else []
+
+
+def _number_sentence(numbers: Sequence[Dict[str, Any]]) -> str:
+    """A real sentence built from an extracted number, used when prose runs out."""
+    if not numbers:
+        return "自动提取有限，请对照原文结果章节补一句结论。"
+    top = numbers[0]
+    return f"{top['value']} —— {top['context']}（p{top['page']}）"
 
 
 def _source_note(digest: Digest, page: Optional[int] = None) -> str:
@@ -105,19 +131,59 @@ def _source_note(digest: Digest, page: Optional[int] = None) -> str:
     return " · ".join(bits)
 
 
+def _chart_label(context: str, value: str, limit: int = 16) -> str:
+    """A short axis label for one extracted number.
+
+    The raw context is a sentence fragment ("Customers only increase their
+    searches (10% increase) in…").  For an axis we want the phrase that *names*
+    the number, so we take the clause before it, strip brackets and trailing
+    values, and trim — never leaving a dangling "increase) in".
+    """
+    text = " ".join(str(context or "").split())
+    position = text.find(value)
+    if position <= 0:
+        return _clean(_tidy_label(text), limit)
+
+    before = text[:position].rstrip()
+    clause = re.split(r"[;；。(（]", before)[-1].strip()
+    after = text[position + len(value):].lstrip(" ;；,，、)）")
+    tail = re.split(r"[;；。]|\.\s", after)[0].strip()
+
+    clause = _tidy_label(clause)
+    tail = _tidy_label(tail)
+    candidate = clause if len(clause) >= 8 else (tail or clause)
+    if len(candidate) < 4:
+        candidate = _tidy_label(text)
+    if len(candidate) < 3:
+        candidate = text
+    return _clean(candidate, limit)
+
+
+def _tidy_label(text: str) -> str:
+    """Drop brackets and dangling punctuation from a label fragment."""
+    cleaned = re.sub(r"[()（）\[\]【】]", " ", str(text or ""))
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,;；.·-—…")
+    return cleaned
+
+
 def _chart_from_numbers(digest: Digest, max_series: int = 6) -> Optional[Dict[str, Any]]:
-    """A bar chart of the extracted percentages, labelled by their context."""
+    """A bar chart of the extracted percentages, labelled by their context.
+
+    Only numbers that score as *this paper's results* are eligible: quoting a
+    percentage from the literature review on the results slide is how a real
+    number still produces a wrong chart.
+    """
     points: List[Tuple[str, float, int]] = []
-    for item in digest.numbers:
+    for item in digest.top_numbers(24, min_score=2):
         if item["kind"] != "percent":
             continue
-        value = _percent_value(item["value"])
-        if value is None:
+        value_num = _percent_value(item["value"])
+        if value_num is None or abs(value_num) > 500:
             continue
-        label = _clean(item["context"], 18)
+        label = _chart_label(item["context"], item["value"])
         if any(label == existing[0] for existing in points):
             continue
-        points.append((label, value, item["page"]))
+        points.append((label, value_num, item["page"]))
         if len(points) >= max_series:
             break
     if len(points) < 2:
@@ -207,7 +273,7 @@ def skeleton_deck(digest: Digest, *, journal: str = "", kicker: str = "组会文
         "data": {
             "ratio": 0.60,
             "left": {
-                "title": _clean((lead.heading if lead else "摘要") + " · 原文要点", 24),
+                "title": SECTION_LABEL.get(lead.key, "原文要点") if lead else "原文要点",
                 "body": _bullets(lead, limit=1, width=150)[0] if _bullets(lead, 1, 150) else "（原文摘要较短，请人工补一句背景。）",
                 "items": _bullets(lead, limit=4) or _bullets(intro, limit=4),
                 "footer": f"原文页码：p{lead.page}" if lead else "",
@@ -277,7 +343,8 @@ def skeleton_deck(digest: Digest, *, journal: str = "", kicker: str = "组会文
                 "kpis": kpis,
                 "cards": cards,
                 "takeaway": {"label": "一句话",
-                             "text": _clean((_bullets(results, 1, 90) or ["（请在原文结果部分补一句结论。）"])[0], 90)},
+                             "text": _clean((_bullets(results, 1, 90)
+                                             or [_number_sentence(numbers)])[0], 90)},
             },
         })
 
@@ -300,7 +367,9 @@ def skeleton_deck(digest: Digest, *, journal: str = "", kicker: str = "组会文
                     "source": f"来源：{_source_note(digest, fig.page)}",
                     "fit": "contain",
                 },
-                "cards": cards or [{"title": "怎么读这张图", "body": "请人工补一句读图提示。", "tone": "plain"}],
+                "cards": cards or [{"title": "怎么读这张图",
+                                    "body": _clean(fig.caption or "请人工补一句读图提示。", 60),
+                                    "tone": "plain"}],
                 "takeaway": {"label": "解读", "text": "图与表相互印证；引用图片请核对原文版权。"},
             },
         })
@@ -343,13 +412,23 @@ def skeleton_deck(digest: Digest, *, journal: str = "", kicker: str = "组会文
     for bullet in _bullets(results or discussion, limit=3, width=64):
         finding_cards.append({"title": _clean(bullet, 22), "body": _clean(bullet, 90),
                               "tone": ["plain", "tint", "primary"][len(finding_cards) % 3]})
+    if not finding_cards:
+        # No usable prose left after the bibliography filter: quote the extracted
+        # numbers instead of shipping an empty page with "请人工补一条".
+        for item in numbers[:2]:
+            finding_cards.append({
+                "title": _clean(item["value"], 12),
+                "body": _clean(item["context"], 80) + f"（p{item['page']}）",
+                "tone": ["plain", "tint"][len(finding_cards) % 2]})
+    if not finding_cards:
+        finding_cards = [{"title": "自动提取有限", "body": "请对照原文结果章节补一条发现。", "tone": "plain"}]
     pages.append({
         "layout": "key_findings",
         "kicker": "FINDINGS",
         "title": "关键发现",
         "data": {
             "banner": {"heading": "需要记住的数字", "figures": figures_banner},
-            "cards": finding_cards or [{"title": "发现", "body": "请人工补一条。", "tone": "plain"}],
+            "cards": finding_cards,
             "cards_ratio": 0.36,
         },
     })

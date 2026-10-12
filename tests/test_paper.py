@@ -205,6 +205,64 @@ def test_digest_for_deck_is_json_friendly():
     assert payload["figures"] and payload["figures"][0]["path"].endswith(".png")
 
 
+# --------------------------------------------------------------------------- #
+# quality filters (the defects the real-paper run exposed)
+# --------------------------------------------------------------------------- #
+
+
+def test_number_scoring_prefers_results_over_citations():
+    sections = [paper.Section("related", "2. Related Work", 1, ""),
+                paper.Section("results", "5. Results", 10, "")]
+    spans = {1: ["related"], 10: ["results"]}
+    citation = paper._score_number("percent", "Chen et al. (2023) report that 80% of jobs change", 1, spans)
+    result = paper._score_number("percent", "recommendation PV decreased by 33.4% ***", 10, spans)
+    assert result > citation
+    assert citation < 2, "a percentage quoted from a citation must not reach the chart"
+
+
+def test_clean_authors_rejects_mangled_metadata():
+    assert paper.clean_authors("2Nev...") == []
+    assert paper.clean_authors("Microsoft Word") == []
+    assert paper.clean_authors("Yuan, Chen, Wang and Sun") == ["Yuan", "Chen", "Wang", "Sun"]
+
+
+def test_citation_lines_are_recognised_and_stripped():
+    bibliography = (
+        "Our results show a strong effect on search behaviour.\n"
+        "Customers search more when recommendation rises.\n"
+        "Moore S, Dolansky M, Singh M, Palmieri P, Alemi F (2010) The systems thinking scale.\n"
+        "Cleveland: Case Western Reserve University.\n"
+        "Morgeson FP, Delaney-Klinger K, Hemingway MA (2005) The importance of job autonomy.\n"
+        "Agarwal R, Dhar V (2014) Big data, data science, and analytics.\n")
+    kept = paper.strip_bibliography(bibliography)
+    assert "Our results show" in kept
+    assert "Moore S" not in kept
+    assert paper.is_citation_line("Moore S, Dolansky M (2010) The systems thinking scale.")
+    assert not paper.is_citation_line("Customers search more in product categories.")
+
+
+def test_section_bullets_drop_fragments_and_citations():
+    section = paper.Section("results", "5. Results", 36,
+                            "1 tests the hypotheses. "
+                            "and the effect is large. "
+                            "Moore S, Dolansky M (2010) The systems thinking scale. "
+                            "Recommendation raises search by 13% in complementary categories. ")
+    bullets = section.bullets()
+    assert len(bullets) == 1
+    assert bullets[0].startswith("Recommendation raises search")
+
+
+def test_chart_labels_are_short_and_readable():
+    label = author._chart_label("Customers only increase their searches (10% increase) in product", "10%")
+    assert 3 <= len(label) <= 17
+    assert "(" not in label and ")" not in label.split(" ")[0]
+
+
+def test_number_sentence_uses_a_real_extracted_number():
+    sentence = author._number_sentence([{"value": "13%", "page": 25, "context": "search increases"}])
+    assert "13%" in sentence and "p25" in sentence
+
+
 def test_build_messages_mentions_figure_budget():
     messages = author.build_messages(make_digest(), max_figures=1)
     assert messages[0]["role"] == "system"
