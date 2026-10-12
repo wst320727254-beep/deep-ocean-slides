@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Linter contract: one deliberate violation per rule family, plus a clean deck.
 
 Every fixture is built in memory with python-pptx, so the tests are fast,
@@ -911,6 +911,34 @@ def test_check_module_does_not_import_the_renderers():
     for allowed in ("from . import primitives", "schema, spec, tokens"):
         assert allowed in head, allowed
 
+
+def test_data_table_rows_are_lists_of_cells_not_objects():
+    """rows is a list of lists; the nested-field rule must only check widths."""
+    import json
+    import tempfile
+
+    from deepocean import spec as _spec
+
+    payload = {"meta": {"title": "t"},
+               "pages": [{"layout": "cover", "title": "封面"},
+                         {"layout": "data_table", "title": "表",
+                          "data": {"columns": ["A", "B"], "rows": [["1", "2"], ["3", "4"]]}}]}
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+        json.dump(payload, fh)
+        path = fh.name
+    deck = _spec.Deck.load(path)
+    report = check.check_deck(deck)
+    assert "L002" not in codes(report), report.to_text()
+
+    bad = {"meta": {"title": "t"},
+           "pages": [{"layout": "cover", "title": "封面"},
+                     {"layout": "data_table", "title": "表",
+                      "data": {"columns": ["A", "B"], "rows": [["1"], ["3", "4"]]}}]}
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+        json.dump(bad, fh)
+        path = fh.name
+    report = check.check_deck(_spec.Deck.load(path))
+    assert "L002" in codes(report), "a row with the wrong cell count must be reported"
 
 if __name__ == "__main__":  # pragma: no cover - manual runner fallback
     import inspect as _inspect

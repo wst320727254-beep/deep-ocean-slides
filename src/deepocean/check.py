@@ -781,7 +781,19 @@ def _check_nested_fields(report: Report, index: int, layout: str, page: "spec.Pa
     requirements = NESTED_REQUIREMENTS.get(layout)
     if not requirements:
         return
+    if layout == "data_table":
+        # ``rows`` is a list of *lists* (cells), not of objects — check widths only.
+        columns = [str(c) for c in (page.data.get("columns") or [])]
+        for position, row in enumerate(page.data.get("rows") or [], 1):
+            if isinstance(row, list) and columns and len(row) != len(columns):
+                report.add(Issue(
+                    "error", "L002",
+                    f"rows[{position}] 有 {len(row)} 个单元格，但表头有 {len(columns)} 列：必须一一对应。",
+                    index, {"layout": layout, "row": position,
+                            "cells": len(row), "columns": len(columns)}))
     for path, keys in requirements:
+        if not keys:
+            continue                     # presence-only entry: covered by the field check
         node = _navigate(page.data, path)
         if node is None:
             continue
