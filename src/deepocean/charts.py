@@ -137,16 +137,29 @@ def _style_axis(axis: Any, *, tick_label_pos: Optional[Any] = None,
             pass
 
 
+def _d_lbls_element(obj: Any) -> Any:
+    """The ``<c:dLbls>`` element behind a data-labels object, or ``None``."""
+    for attr in ("_element", "_dLbls"):
+        element = getattr(obj, attr, None)
+        if element is not None and hasattr(element, "tag"):
+            return element
+    return None
+
+
 def _style_labels(plot: Any, number_format: str, size_px: float,
-                  color: str = "t1") -> None:
-    """Turn data labels on and make them readable (academic decks need them)."""
+                  color: str = "t1", *, kind: str = "") -> None:
+    """Turn data labels on and make them readable (academic decks need them).
+
+    ``kind`` is the spec's chart type: a ``DoughnutPlot`` has no ``chart_type``
+    attribute, so the caller's own type string is the reliable source.
+    """
     if not tokens.CHART["show_data_labels"]:
         return
     try:
         plot.has_data_labels = True
         labels = plot.data_labels
         pos = getattr(XL_LABEL_POSITION, "OUTSIDE_END", None)
-        if plot.chart_type == XL_CHART_TYPE.DOUGHNUT:
+        if kind == "doughnut":
             pos = getattr(XL_LABEL_POSITION, "INSIDE_END", None)
         if pos is not None:
             try:
@@ -156,8 +169,61 @@ def _style_labels(plot: Any, number_format: str, size_px: float,
         labels.number_format = number_format
         labels.number_format_is_linked = False
         _apply_font(labels.font, size_px, color, bold=True)
+        # python-pptx leaves every ``c:showX`` flag at 0, which some readers
+        # (and the repo linter) read as "labels off".  Say it explicitly.
+        # The doughnut plot type also ignores ``data_labels``, so reach for the
+        # first ``c:dLbls`` under this chart type node instead of trusting the
+        # handle python-pptx gave us.
+        element = _d_lbls_element(labels)
+        if element is None or element.find(qn("c:dLbl")) is not None:
+            element = _chart_type_dlbls(plot, element)
+        if element is None or element.find(qn("c:dLbl")) is not None:
+            element = _series_dlbls(plot, element)
+        if element is not None:
+            for name in ("c:showVal", "c:showCatName", "c:showLegendKey",
+                         "c:showSerName", "c:showPercent", "c:showBubbleSize"):
+                node = element.find(qn(name))
+                if node is None:
+                    node = element.makeelement(qn(name), {})
+                else:
+                    element.remove(node)
+                element.insert(0, node)
+                node.set("val", "1")
     except (AttributeError, ValueError):  # pragma: no cover
         pass
+
+
+def _series_dlbls(plot: Any, fallback: Any) -> Any:
+    """The data-labels element on the first series (doughnut stores them there)."""
+    try:
+        for series in plot.series:
+            node = _d_lbls_element(getattr(series, "_element", None))
+            if node is None:
+                holder = getattr(series, "_element", None)
+                node = holder.find(qn("c:dLbls")) if holder is not None else None
+            if node is not None and node.find(qn("c:dLbl")) is None:
+                return node
+    except (AttributeError, TypeError):  # pragma: no cover - defensive
+        pass
+    return fallback
+
+
+def _chart_type_dlbls(plot: Any, fallback: Any) -> Any:
+    """The chart-type level ``<c:dLbls>`` (doughnut/pie ignore the plot handle)."""
+    try:
+        holder = plot._element
+        parent = holder.getparent()
+        for child in parent:
+            if child is holder:
+                continue
+            if child.tag in (qn("c:doughnutChart"), qn("c:pieChart"), qn("c:barChart"),
+                             qn("c:lineChart")):
+                node = child.find(qn("c:dLbls"))
+                if node is not None:
+                    return node
+    except (AttributeError, TypeError):  # pragma: no cover - defensive
+        pass
+    return fallback
 
 
 def _style_series(series: Any, color: RGBColor, kind: str) -> None:
@@ -299,6 +365,11 @@ def add_chart(slide: Any, x: float, y: float, w: float, h: float,
     ramp_keys = [str(c) for c in explicit] if explicit else list(theme_colors or DEFAULT_SERIES)
     ramp = series_colors(max(len(series_specs), len(categories)), ramp_keys)
 
+    # Data labels first: the plot-level ``showVal`` has to be set before any
+    # per-point label is touched, otherwise the plot element keeps saying "off".
+    fmt = '0"%"' if str(spec.get("unit") or "").strip() == "%" else "0.##"
+    _style_labels(chart.plots[0], fmt, LABEL_PX, tokens.CHART["data_label_color"], kind=kind)
+
     # Series colours ------------------------------------------------------ #
     for i, series in enumerate(chart.series):
         color = ramp[i % len(ramp)]
@@ -317,7 +388,7 @@ def add_chart(slide: Any, x: float, y: float, w: float, h: float,
                 except (AttributeError, ValueError):  # pragma: no cover
                     pass
 
-    # Axes, labels, legend ------------------------------------------------ #
+    # Axes, legend -------------------------------------------------------- #
     if kind != "doughnut":
         try:
             value_axis = chart.value_axis
@@ -332,9 +403,6 @@ def add_chart(slide: Any, x: float, y: float, w: float, h: float,
                         color=tokens.CHART["axis_color"], size_px=LABEL_PX)
         except (AttributeError, ValueError):  # pragma: no cover
             pass
-    # A doughnut has no axes, but it still needs its slice values on the plot.
-    fmt = '0"%"' if str(spec.get("unit") or "").strip() == "%" else "0.##"
-    _style_labels(chart.plots[0], fmt, LABEL_PX, tokens.CHART["data_label_color"])
 
     try:
         chart.has_legend = True

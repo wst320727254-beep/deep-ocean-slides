@@ -28,7 +28,7 @@ jobs:
         run: python -m pytest -q
       - name: Build the reference deck
         run: python -m deepocean demo -o out
-      - name: Lint the reference deck (strict: warnings fail too)
+      - name: Lint the reference deck in strict mode
         run: python -m deepocean check out/deep-ocean-demo.pptx --strict --no-color
       - name: Lint the reference deck source (strict)
         run: python -m deepocean check examples/demo-deck.yaml --strict
