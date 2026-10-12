@@ -1,12 +1,16 @@
 # Deep Ocean Slides · 深海学术风幻灯片
 
 > **像论文，不像海报。** — 把一套打磨好的学术风 16:9 PPT 设计规范，变成可执行、可检查、可复用的代码。
+>
+> **完全离线 · 不需要 API key · 零成本**：论文 PDF → 可编辑 `.pptx` + 单文件 HTML + 自动排版自检，
+> 全程本地完成（联网仅在你主动使用可选的 `--llm` 时才需要）。
 
 [![CI](https://github.com/wst320727254-beep/deep-ocean-slides/actions/workflows/ci.yml/badge.svg)](https://github.com/wst320727254-beep/deep-ocean-slides/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-1B3A5C.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-2E9BA6.svg)](pyproject.toml)
+[![Offline](https://img.shields.io/badge/offline-no%20API%20key-2E9BA6.svg)](#给朋友用两种装法)
 [![PPTX](https://img.shields.io/badge/PPTX-16%3A9%20%C2%B7%201280%C3%97720-6B86A3.svg)](docs/STYLE.md)
-[![Layouts](https://img.shields.io/badge/layouts-12-C0392B.svg)](docs/STYLE.md#版式库)
+[![Layouts](https://img.shields.io/badge/layouts-13-C0392B.svg)](docs/STYLE.md#版式库)
 
 ![Deep Ocean Slides 预览](assets/preview.png)
 
@@ -21,12 +25,17 @@
 |---|---|---|
 | **生成器** | `deepocean build deck.yaml` → 真·`.pptx`（可继续在 PowerPoint 里改） | 想批量出稿、换论文复用版式的人 |
 | **网页版** | `deepocean html deck.yaml` → 单文件 HTML，浏览器打开、Ctrl+P 直接导出 PDF | 要发给别人看、或不想装 Office 的人 |
-| **设计规范** | [`docs/STYLE.md`](docs/STYLE.md)：颜色/字号/母版/组件/12 页坐标全表 | 想手工在 PowerPoint / Keynote / Figma 里复刻的人 |
+| **设计规范** | [`docs/STYLE.md`](docs/STYLE.md)：颜色/字号/母版/组件/逐页坐标全表 | 想手工在 PowerPoint / Keynote / Figma 里复刻的人 |
+
+再加一条离线通路：**论文 PDF → 摘要包 → deck**（[`docs/AUTHORING.md`](docs/AUTHORING.md) 写作契约 +
+`deepocean normalize` 离线修结构 + `deepocean check` 自检），以及给 AI agent 用的
+[`skills/deep-ocean-slides/`](skills/deep-ocean-slides/SKILL.md)。
 
 外加一件多数模板缺的东西：**自动排版自检**。规范里"红色不超过 6%""正文不小于 13px""内容页必须撑满"
 这些原本只能靠眼睛盯的条目，现在是 `deepocean check` 里 31 条可执行的规则。
 
 ## 特性
+
 
 - **设计令牌单一事实来源**：`src/deepocean/tokens.py` 一处定义颜色、字号阶梯、四区母版、配比预算；
   生成器、网页渲染器、linter、CSS 变量全部从它派生，改一个数字全篇同步。
@@ -78,6 +87,29 @@ agent 会按 `SKILL.md` 的四步流程执行，并遵守里面的质量闸门�
 "数字必须带页码"、"配图 ≤ 2 页"、"不编造"）。不装 agent skill 也能用——命令行本身就是完整流程。
 
 > API key 属于每个使用者自己：不要共用、不要提交进仓库。本仓库全程不读写 key 文件。
+
+### 给朋友用：两种装法
+
+| | **Download ZIP**（推荐给用 agent 的人） | **pip 直接从 GitHub 装**（推荐给只用命令行的人） |
+|---|---|---|
+| 拿到什么 | **整个仓库**：`skills/`、`docs/`、`examples/`、`tools/`、`assets/` 全都在 | 只有 Python 包（`deepocean` 命令）；**没有** `skills/`、`docs/`、`examples/` |
+| 还需要一步 | 解压后在该目录执行 `pip install -e ".[yaml,paper]"` | 无，装完即可用 |
+| 适合 | 要**让 AI agent 用这个技能**（agent 需要读 `SKILL.md` 与 `docs/AUTHORING.md`） | 只要 `deepocean` 命令跑流程 |
+| 更新 | 重新下载 ZIP 覆盖（无版本历史） | `pip install -U` 重装（git 拉最新） |
+
+```powershell
+# ZIP 路线（Windows PowerShell）
+Expand-Archive "$env:USERPROFILE\Downloads\deep-ocean-slides-main.zip" "$env:USERPROFILE\deep-ocean-slides"
+cd "$env:USERPROFILE\deep-ocean-slides"
+python -m pip install -e ".[yaml,paper]"
+deepocean version                                  # 能打印版本就装好了
+# 让 agent 用它：把 skills\deep-ocean-slides\ 放进你的 skills 目录
+```
+
+> 一句话：**两者都能出成品**；但"用 skill"必须走 ZIP（或 `git clone`），因为 pip 只装 Python 包，
+> 不装技能说明书。<br>
+> 另外记得装 **Python 3.9+**：Windows 用户可从 python.org 或 Microsoft Store 安装，安装时勾选
+> "Add python.exe to PATH"。
 
 ## 60 秒上手
 
