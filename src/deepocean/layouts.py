@@ -517,7 +517,14 @@ def render_chart_insight(slide: Shape, page: Any, ctx: Any) -> None:
     explicit = _num(chart_spec.get("height"), 0.0)
     if explicit > 0:
         chart_h = max(120.0, min(explicit, max(120.0, avail)))
-    add_chart(slide, float(box["cx"]), cur, float(box["cw"]), chart_h, chart_spec)
+    try:
+        add_chart(slide, float(box["cx"]), cur, float(box["cw"]), chart_h, chart_spec)
+    except ValueError as exc:
+        # A malformed chart must not break the deck: draw the hole and say why
+        # (the linter reports the same problem as L002 before you get here).
+        rect(slide, float(box["cx"]), cur, float(box["cw"]), chart_h, fill="light", line="line")
+        _text(slide, float(box["cx"]) + 16.0, cur + 16.0, float(box["cw"]) - 32.0, 60.0,
+              f"图表数据缺失：{exc}", token="card_body", size=13.0, color="brick", line_spacing=1.4)
     if note:
         _footnote(slide, float(box["cx"]), float(box["cy"]) + float(box["ch"]) - 18.0,
                   float(box["cw"]), note, size=11.5, color="t3")

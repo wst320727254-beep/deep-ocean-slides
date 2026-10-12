@@ -161,6 +161,13 @@ def main(argv=None) -> int:
     if args.skip_render:
         images = sorted(glob.glob(os.path.join(workdir, "page*.png")))
     else:
+        # Clear stale page images from an earlier run, otherwise the contact
+        # sheet silently mixes pages of two different decks.
+        for stale in glob.glob(os.path.join(workdir, "page*.png")):
+            try:
+                os.remove(stale)
+            except OSError:
+                pass
         pptx = build_deck(os.path.join(workdir, "deep-ocean-demo.pptx"), args.deck)
         pdf = to_pdf(pptx, workdir)
         all_pages = rasterise(pdf, workdir, pages, dpi=args.dpi)

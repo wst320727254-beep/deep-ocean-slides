@@ -498,61 +498,95 @@ def _balance_heroes(pages: List[Dict[str, Any]], target: float = 0.42) -> None:
 
 SYSTEM_PROMPT = """你是学术汇报 PPT 的内容作者。请把论文摘要包改写成 Deep Ocean 风格的 deck 文档，只输出 JSON。
 
-硬性要求：
-1. 只使用摘要包里出现的事实与数字；每个数字后面如有页码请保留页码。禁止编造数据、公式或引用。
-2. 结构：首尾必须是 cover 与 closing；中间 6–10 页；每页 layout 必须是下列之一：
+输出与语言
+1. 只输出一个 JSON 对象，形如 {{"meta": {{...}}, "pages": [...]}}；不要 Markdown 代码块、不要解释。
+2. 除论文标题与专有名词外，**所有文字用中文写**（这是中文组会汇报）。
+3. 严禁占位语："待填""示例""请补充""TODO"一律不允许出现；每一页都必须是可直接讲的内容。
+
+内容纪律（最重要）
+4. 只使用摘要包里出现的事实与数字；数字必须与摘要包完全一致，并在可能的字段里保留页码（如 note 写 "p25"）。
+5. 每页标题就是这一页的**判断**（"所以呢"），不超过 20 字；卡片正文不超过 60 字；不要写成英文句子的直译。
+6. 摘要包是英文时，先理解再改写成中文判断，不要保留英文长句（专有名词、变量名、统计记号除外）。
+7. 数字对不上或摘要包缺少结论时，就用摘要包里最接近的真实内容，而不是编造。
+
+结构
+8. 首尾必须是 cover 与 closing；中间 5–9 页；每页 layout 必须是下列之一：
    {layouts}
-3. 每页字段必须严格符合该 layout 的契约（字段名、类型），不要新增字段：
+9. 每页字段必须严格符合该 layout 的契约（字段名、类型），不要新增字段：
 {schema}
-4. 节奏：hero 页面（cover/key_findings/closing 以及标注 "hero": true 的页）约占 1/3，
-   相邻页不要用同一个 layout；宁可少一页也不要让某一页空。
-5. 文字风格：中文、克制、每页一个判断（"所以呢"），标题不超过 20 字，卡内正文不超过 60 字。
-6. 配图：最多 {max_figures} 页 image_evidence，且只使用摘要包 figures 里给出的 path；
-   没有合适配图就不要用这个 layout。
-7. 只输出一个 JSON 对象，形如 {{"meta": {{...}}, "pages": [...]}}，不要输出解释或 Markdown 代码块。"""
+10. 节奏：hero 页（cover / key_findings / closing，以及标注 "hero": true 的页）约占 1/3；
+    相邻两页不要用同一个 layout。
+11. 配图：最多 {max_figures} 页 image_evidence，且只能使用摘要包 figures 里给出的 path；没有合适配图就不要用。"""
 
 
 def _schema_prompt() -> str:
+    """Describe every layout *including its nested shape*.
+
+    Field names alone were not enough: the model filled ``big_number.items`` with
+    ``{value, label}`` instead of ``{number, title, body}``, so the pages rendered
+    with empty cards while still passing field-level validation.
+    """
     lines: List[str] = []
     for name in schema.LAYOUT_NAMES:
         cfg = schema.LAYOUTS[name]
-        fields = ", ".join(f"{f}{'*' if s['required'] else ''}" for f, s in cfg["fields"].items())
-        lines.append(f"- {name}（{cfg['zh']}）: {fields}")
+        lines.append(f"- {name}（{cfg['zh']}）")
+        for field, spec in cfg["fields"].items():
+            star = "*" if spec["required"] else " "
+            note = spec.get("note") or spec.get("type") or ""
+            lines.append(f"    {field}{star}: {note}")
+    lines.append("- 通用规则：卡片对象统一用 {title, body, items[], tone}；"
+                 "tone ∈ plain|tint|primary|accent|neutral|danger；"
+                 "KPI 统一用 {value, label, note, tone}；列表项 tone 决定底色。")
     return "\n".join(lines)
 
 
 def build_messages(digest: Digest, *, max_figures: int = MAX_FIGURE_PAGES) -> List[Dict[str, str]]:
     system = SYSTEM_PROMPT.format(layouts=", ".join(schema.LAYOUT_NAMES),
                                   schema=_schema_prompt(), max_figures=max_figures)
-    user = (digest.to_markdown() + "\n\n"
-            f"可选配图（最多 {max_figures} 张）：\n" +
-            "\n".join(f"- path={f.path}  第{f.page}页  {f.caption or '(无图注)'}"
-                      for f in digest.best_figures(4)))
-    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+    body = [digest.to_markdown(),
+            "",
+            f"可选配图（最多 {max_figures} 张，path 必须原样使用）："]
+    for figure in digest.best_figures(4):
+        body.append(f"- path={figure.path}  第{figure.page}页  {figure.caption or '(无图注)'}")
+    if not digest.figures:
+        body.append("- （本论文没有可提取的配图，不要使用 image_evidence）")
+    return [{"role": "system", "content": system},
+            {"role": "user", "content": "\n".join(body)}]
 
 
 def chat(messages: Sequence[Dict[str, str]], *, base_url: str = DEFAULT_BASE_URL,
          model: str = DEFAULT_MODEL, api_key: Optional[str] = None,
-         temperature: float = 0.2, timeout: int = 120) -> str:
-    """One OpenAI-compatible chat completion, using stdlib urllib only."""
+         temperature: float = 0.2, timeout: int = 180, json_mode: bool = True) -> str:
+    """One OpenAI-compatible chat completion, using stdlib urllib only.
+
+    ``json_mode`` asks the provider for a JSON object; some providers reject
+    that request unless the word "json" appears in the prompt, and a few do not
+    support it at all — so a 400/404 triggers one retry without it.
+    """
     key = api_key or next((os.environ[name] for name in API_KEY_ENV if os.environ.get(name)), "")
     if not key:
         raise RuntimeError(
             "no API key found. Export one of " + ", ".join(API_KEY_ENV) +
             ' (or pass --api-key). Without a key use the offline skeleton instead.')
-    payload = json.dumps({"model": model, "messages": list(messages),
-                          "temperature": temperature,
-                          "response_format": {"type": "json_object"}},
-                         ensure_ascii=False).encode("utf-8")
+    payload: Dict[str, Any] = {"model": model, "messages": list(messages),
+                               "temperature": temperature}
+    if json_mode:
+        if not any("json" in str(m.get("content", "")).lower() for m in messages):
+            payload["messages"] = list(messages) + [{"role": "system", "content": "输出必须是 JSON。"}]
+        payload["response_format"] = {"type": "json_object"}
     request = urllib.request.Request(
-        base_url.rstrip("/") + "/chat/completions", data=payload,
+        base_url.rstrip("/") + "/chat/completions",
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
         method="POST")
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:  # pragma: no cover - network dependent
+    except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "replace")[:400]
+        if exc.code in (400, 404) and json_mode:
+            return chat(messages, base_url=base_url, model=model, api_key=api_key,
+                        temperature=temperature, timeout=timeout, json_mode=False)
         raise RuntimeError(f"model call failed ({exc.code}): {detail}") from exc
     except urllib.error.URLError as exc:  # pragma: no cover - network dependent
         raise RuntimeError(f"model call failed: {exc.reason}") from exc
@@ -568,17 +602,56 @@ def _strip_fences(text: str) -> str:
     return text[start:end + 1] if start >= 0 and end > start else text
 
 
+def _sanitize_authors(data: Dict[str, Any], digest: Digest) -> Dict[str, Any]:
+    """Never let the cover credit a name that is not in the paper.
+
+    Models occasionally echo PDF metadata noise (``"2Nev"``) or invent a byline.
+    Only names that appear in the extracted author list survive; an unknown paper
+    falls back to a neutral "汇报人".
+    """
+    meta = data.setdefault("meta", {}) if isinstance(data.get("meta"), dict) else {}
+    if not isinstance(data.get("meta"), dict):
+        data["meta"] = meta
+    known = {str(author).strip().lower() for author in digest.authors if str(author).strip()}
+    raw = meta.get("authors")
+    if isinstance(raw, str):
+        raw = [raw]
+    candidates = [str(item).strip() for item in (raw or []) if str(item).strip()]
+    if not known:
+        meta["authors"] = ["汇报人"]
+        return data
+    kept = [item for item in candidates if item.lower() in known]
+    meta["authors"] = kept or list(digest.authors)
+    return data
+
+
 def llm_deck(digest: Digest, *, base_url: str = DEFAULT_BASE_URL, model: str = DEFAULT_MODEL,
              api_key: Optional[str] = None, max_figures: int = MAX_FIGURE_PAGES,
-             retries: int = 1) -> Tuple[Dict[str, Any], List[str]]:
-    """Ask a model for a deck, validate it, and repair it once if needed.
+             retries: int = 2) -> Tuple[Dict[str, Any], List[str]]:
+    """Ask a model for a deck, validate it, and repair it until it passes.
 
-    Returns ``(deck_dict, notes)``; raises ``RuntimeError`` when even the repair
-    round cannot produce a valid document.
+    Validation is two-layered: the document schema (fields/layouts) **and** the
+    style linter, so an out-of-spec page (placeholder text, wrong hero ratio,
+    off-palette colour) is fed back to the model as a concrete defect list.
+    Returns ``(deck_dict, notes)``; raises ``RuntimeError`` when the model cannot
+    produce a valid document within ``retries`` repair rounds.
     """
     messages = build_messages(digest, max_figures=max_figures)
     notes: List[str] = []
     last_problems: List[str] = []
+
+    def lint(deck: "spec.Deck") -> List[str]:
+        found = spec.validate(deck, schema.field_table())
+        try:
+            from . import check as check_mod
+
+            report = check_mod.check_deck(deck)
+            found += [f"[{issue.code}] {issue.message}"
+                      for issue in report.issues if issue.level in ("error", "warn")]
+        except Exception:  # pragma: no cover - the linter must never block authoring
+            pass
+        return found
+
     for attempt in range(retries + 1):
         raw = chat(messages, base_url=base_url, model=model, api_key=api_key)
         try:
@@ -587,16 +660,23 @@ def llm_deck(digest: Digest, *, base_url: str = DEFAULT_BASE_URL, model: str = D
             last_problems = [f"模型返回的不是合法 JSON：{exc}"]
             messages = messages + [{"role": "user", "content": "上一次输出无法解析，请只输出 JSON 对象。"}]
             continue
-        deck = spec.Deck.from_dict(data)
-        problems = spec.validate(deck, schema.field_table())
+        try:
+            deck = spec.Deck.from_dict(data)
+        except Exception as exc:
+            last_problems = [f"deck 结构无法解析：{exc}"]
+            messages = messages + [{"role": "user", "content": f"结构有误：{exc}。请修正后重新输出。"}]
+            continue
+        problems = lint(deck)
         if not problems:
-            notes.append(f"模型出稿通过校验（第 {attempt + 1} 次尝试）。")
+            data = _sanitize_authors(data, digest)
+            notes.append(f"模型出稿通过 schema + 规范自检（第 {attempt + 1} 次尝试）。")
             return data, notes
         last_problems = problems
         notes.append(f"第 {attempt + 1} 次出稿有 {len(problems)} 个问题，已要求模型修正。")
         messages = messages + [
             {"role": "assistant", "content": _strip_fences(raw)[:4000]},
-            {"role": "user", "content": "这份 deck 校验失败，请修正后重新输出完整 JSON：\n- "
+            {"role": "user", "content": "这份 deck 未通过校验，请修正后重新输出完整 JSON。"
+                                        "注意：只改有问题的地方，不要丢掉已有的数字与页码。\n- "
                                         + "\n- ".join(problems[:12])},
         ]
     raise RuntimeError("model could not produce a valid deck:\n  - " + "\n  - ".join(last_problems[:12]))

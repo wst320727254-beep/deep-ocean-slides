@@ -650,6 +650,8 @@ def check_deck(deck: "spec.Deck") -> Report:
                 index, {"layout": layout, "field": field_name}))
 
         _scan_placeholders(report, index, layout, page)
+        _check_chart_spec(report, index, layout, page)
+        _check_nested_fields(report, index, layout, page)
 
     # -- rhythm ------------------------------------------------------------ #
     count = len(pages)
@@ -697,6 +699,107 @@ def check_deck(deck: "spec.Deck") -> Report:
     _finish_stats(stats, report)
     report.stats = stats
     return report
+
+
+def _check_chart_spec(report: Report, index: int, layout: str, page: "spec.Page") -> None:
+    """L002 — a chart page must carry a drawable chart.
+
+    ``chart`` is a required field, but "present" is not the same as "usable": an
+    empty ``categories`` list or a series whose ``values`` do not line up makes
+    ``add_chart`` raise, which used to break the whole build instead of being
+    reported as a fixable content problem.
+    """
+    if layout != "chart_insight":
+        return
+    chart = page.data.get("chart")
+    if not isinstance(chart, dict):
+        return
+    categories = [c for c in (chart.get("categories") or []) if str(c).strip()]
+    series = [s for s in (chart.get("series") or []) if isinstance(s, dict)]
+    if not categories:
+        report.add(Issue("error", "L002",
+                         "chart.categories 不能为空：柱状图至少要有一个类目（可与原文表头一致）。",
+                         index, {"layout": layout, "field": "chart.categories"}))
+    if not series:
+        report.add(Issue("error", "L002",
+                         "chart.series 不能为空：至少要有一条序列与其数值。",
+                         index, {"layout": layout, "field": "chart.series"}))
+        return
+    for position, item in enumerate(series):
+        values = [v for v in (item.get("values") or [])]
+        if not values:
+            report.add(Issue("error", "L002",
+                             f"chart.series[{position}]（{item.get('name') or '未命名'}）没有数值。",
+                             index, {"layout": layout, "field": "chart.series.values"}))
+        elif categories and len(values) != len(categories):
+            report.add(Issue("error", "L002",
+                             f"chart.series[{position}]（{item.get('name') or '未命名'}）有 {len(values)} 个数值，"
+                             f"但类目有 {len(categories)} 个：两者必须一一对应。",
+                             index, {"layout": layout, "values": len(values),
+                                     "categories": len(categories)}))
+        elif not all(isinstance(v, (int, float)) for v in values):
+            report.add(Issue("error", "L002",
+                             f"chart.series[{position}] 的数值必须是数字（不要写成 '13%' 这类字符串）。",
+                             index, {"layout": layout, "field": "chart.series.values"}))
+
+
+#: Nested keys a layout's items must carry, or the page renders with empty cards.
+#: ``path`` is dotted; ``keys`` are checked on the dict (or on every dict in a list).
+NESTED_REQUIREMENTS: Dict[str, Tuple[Tuple[str, Tuple[str, ...]], ...]] = {
+    "big_number": (("items", ("number", "title")),),
+    "key_findings": (("banner", ("heading",)), ("banner.figures", ("value", "label"))),
+    "chart_insight": (("kpis", ("value", "label")),),
+    "image_evidence": (("image", ("path",)),),
+    "two_column": (("left", ("title",)),),
+    "split_cards": (("left", ("title",)), ("right", ("title",))),
+    "concept_flow": (("left", ("title",)), ("center", ("label",)), ("right", ("title",))),
+    "roadmap": (("aside", ("title",)), ("steps", ("title",))),
+    "experiment_design": (("steps", ("label",)), ("groups", ("left", "right"))),
+    "matrix2x2": (("aside", ("title",)), ("quadrants", ("title",))),
+    "data_table": (("columns", ()), ("rows", ())),
+    "closing": (("quote", ("text",)),),
+}
+
+
+def _navigate(data: Any, path: str) -> Any:
+    node = data
+    for part in path.split("."):
+        if isinstance(node, dict):
+            node = node.get(part)
+        else:
+            return None
+    return node
+
+
+def _check_nested_fields(report: Report, index: int, layout: str, page: "spec.Page") -> None:
+    """L002 — item-level keys, so a card never renders blank.
+
+    Field-level validation said "items is present"; the slide still showed empty
+    boxes because each item used the wrong inner keys.  This checks the shape the
+    renderer actually reads.
+    """
+    requirements = NESTED_REQUIREMENTS.get(layout)
+    if not requirements:
+        return
+    for path, keys in requirements:
+        node = _navigate(page.data, path)
+        if node is None:
+            continue
+        items = node if isinstance(node, list) else [node]
+        for position, item in enumerate(items):
+            if isinstance(item, str):
+                continue
+            if not isinstance(item, dict):
+                report.add(Issue("error", "L002",
+                                 f"{path} 的第 {position + 1} 项必须是对象（{{…}}），当前是 {type(item).__name__}。",
+                                 index, {"layout": layout, "field": path}))
+                continue
+            for key in keys:
+                if item.get(key) in (None, "", [], {}):
+                    report.add(Issue("error", "L002",
+                                     f"{path}[{position + 1}] 缺少 {key!r}：渲染出来会是一张空卡。"
+                                     f"（{path} 每项需要 {'/'.join(keys)}）",
+                                     index, {"layout": layout, "field": f"{path}.{key}"}))
 
 
 def _scan_placeholders(report: Report, index: int, layout: str, page: "spec.Page") -> None:
