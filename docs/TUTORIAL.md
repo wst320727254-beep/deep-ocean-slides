@@ -1,6 +1,6 @@
-# 复刻与使用教程
+﻿# 复刻与使用教程
 
-> **这份文件解决什么问题**：把 Deep Ocean 这套风格搬到你的机器上——不管你是想用本仓库的 CLI 直接出片，还是要在 PowerPoint / Keynote / Figma 里手工复刻，或者用 Python API 写自己的版式。五条路线互不排斥，可以混用。
+> **这份文件解决什么问题**：把 Deep Ocean 这套风格搬到你的机器上——不管你是想用本仓库的 CLI 直接出片，还是要在 PowerPoint / Keynote / Figma 里手工复刻，或者用 Python API 写自己的版式。六条路线互不排斥，可以混用。
 >
 > **谁该读它**：第一次使用本项目的同学（走路线 A）、要手工做 PPT 的师兄师姐（路线 B/C/D）、要扩展版式的开发者（路线 E）、以及所有撞过坑的人（结尾 FAQ）。
 
@@ -37,7 +37,7 @@ pip install -e ".[yaml]"
 ```bash
 deepocean version        # 打印版本（应为 1.0.0）
 deepocean units          # 打印 px→pt/inch/cm 换算表
-deepocean layouts        # 打印 12 个版式的字段说明
+deepocean layouts        # 打印 13 个版式的字段说明
 ```
 
 > **装完 `deepocean` 不在 PATH 上？** 用等价的模块入口：`python -m deepocean.cli version`。
@@ -47,11 +47,11 @@ deepocean layouts        # 打印 12 个版式的字段说明
 
 ```bash
 deepocean init mytalk              # 在 ./mytalk/ 写出 3 页起始 deck
-deepocean init mytalk --demo       # 直接写出完整 13 页示例
+deepocean init mytalk --demo       # 直接写出完整 14 页示例
 ```
 
 > `deepocean init` 写出的 3 页模板 = `examples/minimal-deck.yaml`（`cover` + `two_column` + `key_findings`）；
-> `--demo` 写出的是 13 页参考 deck（覆盖全部 12 个版式，含附录数据表页），也就是 `examples/demo-deck.yaml`。
+> `--demo` 写出的是 14 页参考 deck（覆盖全部 13 个版式，含附录数据表页），也就是 `examples/demo-deck.yaml`。
 
 ### A.3 完整 CLI 参考
 
@@ -61,7 +61,7 @@ deepocean html <deck> [-o out.html]                                # 生成单�
 deepocean check <deck|out.pptx> [--json] [--strict]                # 自动排版自检
 deepocean preview <deck> [--out DIR]                               # 一次产出 pptx + html + 自检报告
 deepocean init [DIR] [--demo]                                      # 写出起始 deck 模板
-deepocean layouts [LAYOUT]                                         # 打印 12 个版式的字段说明
+deepocean layouts [LAYOUT]                                         # 打印 13 个版式的字段说明
 deepocean tokens [--json|--md|--css]                               # 打印设计令牌
 deepocean units                                                    # 打印单位换算表
 deepocean demo [-o DIR]                                            # 生成内置参考示例（13 页）
@@ -74,7 +74,7 @@ deepocean version
 | `html` | deck → **单文件** HTML（无外部依赖，可双击打开 / 打印 PDF） | `-o` 输出路径；`--fragment` 只输出 body 片段 |
 | `check` | 自动排版自检；可查 deck，也可查已生成的 pptx | `--json` 机器可读；`--strict` 有警告即非零退出；`--no-color` |
 | `preview` | 一次拿到 pptx + html + 自检报告 | `--out DIR` 输出目录；`--json`；`--strict` |
-| `init` | 写出一份可编译的起始 deck | `--demo` 写完整 13 页示例而不是 3 页模板 |
+| `init` | 写出一份可编译的起始 deck | `--demo` 写完整 14 页示例而不是 3 页模板 |
 | `layouts` | 查版式字段（写 deck 时的权威参考） | 传版式名只看一个 |
 | `tokens` | 查设计令牌 | `--json` / `--md` / `--css`（互斥） |
 | `units` | 查 px→pt/inch/cm 换算 | — |
@@ -92,7 +92,7 @@ for f in out/*.pptx; do deepocean check "$f" --strict || exit 1; done
 ### A.4 典型工作流
 
 ```bash
-deepocean init mytalk --demo          # 1. 起模板（13 页参考 deck 的内容）
+deepocean init mytalk --demo          # 1. 起模板（14 页参考 deck 的内容）
 deepocean preview mytalk/deck.yaml    # 2. 出 pptx + html + 自检报告，边看边改
 deepocean check mytalk/deck.yaml --strict   # 3. 静态关：结构 / 节奏 / 占位文字
 deepocean check out/mytalk.pptx --strict    # 4. 产物关：几何 / 排版 / 色彩
@@ -419,6 +419,63 @@ if not report.ok():
 
 ---
 
+## 路线 F · 从一篇论文 PDF 直接出初稿
+
+前六条路线都假设"内容已经想好了"。实际组会汇报里，最费时间的恰恰是**读论文 → 选证据 → 排页**。
+`from-paper` 把这一段做成两步：先离线抽出结构化摘要包，再按版式节奏排成可编译的 deck。
+
+```bash
+pip install -e ".[yaml,paper]"     # paper 提供 pypdf
+deepocean from-paper "汇报二 生成式AI.pdf" \
+    --journal "ISR · 2025" \
+    --max-figures 1 \
+    --build
+```
+
+产物（默认都放在 PDF 同目录）：
+
+| 文件 | 内容 |
+|---|---|
+| `汇报二 生成式AI.digest.md` | 摘要包：章节节选 + 候选表格 + **带页码的数字** + 候选配图清单 |
+| `汇报二 生成式AI.figures/` | 导出的配图 PNG（自动过滤图标，自动缩到 ≤1600px） |
+| `汇报二 生成式AI.deck.yaml` | 8 页左右初稿：cover → 背景 → 方法 → 结果 → 证据 → 表格 → 发现 → 总结 |
+| `汇报二 生成式AI.pptx` | `--build` 时的编译产物，可直接打开对照 |
+
+### 它做了什么判断
+
+- **标题**：读第 1 页的最大字号文本（PDF 元数据里常是期刊抬头，如 "Submitted to ISR"，会被丢弃）。
+- **数字**：正则抓百分比 / p 值 / 样本量 / 系数，**每个数字都带原文页码**；`chart_insight` 直接把它们画成柱状图。
+- **表格**：只有"列数一致 + 填充率 ≥75% + 含数字"的块才成页，避免把段落切碎当表格。
+- **配图**：按"有图注 > 图注含 framework/机制/主效应 > 形状接近 4:3"排序，**默认只排 1 页、上限 2 页**；
+  矢量图（公式、流程图线稿）不会被提取，需要你手工截图再放进 `image_evidence`。
+- **不编造**：文字来自原文句子，数字来自原文页码；提取不到的地方会明确写
+  "自动提取未覆盖该部分，请对照原文第 N 页前后补充"，而不是悄悄编一句。
+
+### 想让叙事更好？加 `--llm`
+
+```bash
+export DEEPSEEK_API_KEY=sk-...          # 或 OPENAI_API_KEY
+deepocean from-paper "汇报二 生成式AI.pdf" --llm --model deepseek-chat --max-figures 1
+```
+
+模型拿到的是摘要包（而不是整篇 PDF），要求只输出本仓库 schema 的 JSON；出稿后会跑
+`spec.validate` + 版式字段校验，**不合格会自动把错误清单回灌给模型改一轮**。任何联网失败都会
+自动退回离线骨架，不会卡住流程。
+
+### 出稿之后
+
+初稿是**给你改的**，不是终点：
+
+```bash
+deepocean check   "汇报二 生成式AI.deck.yaml" --strict   # 先看有没有越界/字号/配色问题
+deepocean preview "汇报二 生成式AI.deck.yaml" --out out   # pptx + html + 报告
+```
+
+按 `docs/CHECKLIST.md` 逐条过一遍人工项（数值是否回原文核对、每页是否说了"所以呢"、
+配图是否真的是证据），这是机器判不了的三件事。
+
+---
+
 ## 常见问题（FAQ）
 
 ### F1 中文显示成方框 / 字体不对
@@ -486,7 +543,7 @@ deepocean build deck.json -o out.pptx
 
 | 场合 | 建议页数 | 复用方式 |
 |---|---|---|
-| 文献组会 | 12 页（默认） | `deepocean init mytalk --demo` 起 13 页参考 deck（12 页正文 + 1 页附录），只替换数值与文案 |
+| 文献组会 | 12 页（默认） | `deepocean init mytalk --demo` 起 14 页参考 deck（12 页正文 + 1 页附录），只替换数值与文案 |
 | 开题报告 | 12–16 页 | 用 `two_column`（背景/缺口）+ `roadmap`（技术路线）+ `experiment_design`（方案）+ `closing`（计划与风险）；不要塞满 26 个品类那种细节 |
 | 中期检查 | 10–12 页 | 用 `chart_insight` 放结果图，`key_findings` 放阶段性结论，`data_table` 放附加表 |
 | 答辩 | 15–20 页 | 在 12 页骨架上加附录页（`data_table`），把答辩可能被追问的表放在最后；正文保持 12 页不变 |

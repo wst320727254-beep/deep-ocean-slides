@@ -649,6 +649,40 @@ deepocean layouts matrix2x2       # 单个版式
 
 ---
 
+### 8.1 `image_evidence` —— 图片证据页（第 13 个版式）
+
+论文原图是"证据化配图"最直接的形式，但它也最容易破坏版式节奏，所以规则很硬：
+
+| 项 | 规定 |
+|---|---|
+| 张数 | **全篇 ≤ 2 页**（`from-paper` 默认只排 1 页）；图片是证据，不是装饰 |
+| 画布 | 左侧图片卡占 `left_w = (1200 - 20) × side_ratio`（`side_ratio` 0.50–0.72，默认 0.62），高 440 |
+| 图片 | 一律 **contain** 等比缩放居中，四边留 1px `#D6DCE5` 细框，绝不拉伸、绝不裁切正文 |
+| 图注 | 卡内底部 11.5px `t2`；来源单独一行 11.5px `t3`，写清"第 N 页 / 文件名" |
+| 右栏 | 2–3 张解读卡（`card_head`）+ 可选深蓝"解读"卡；与 `chart_insight` 同一套预算逻辑 |
+| 缺图 | 画浅灰占位框并写明缺失路径（不静默跳过，也不让 build 失败） |
+
+> 判断标准：把图拿掉，这一页的文字是否还成立？如果成立，说明你排的是"装饰"而不是"证据"。
+> 想插图时优先问自己：这张图是**数据**（可读数）还是**示意**（只能看个大概）。规范只欢迎前者。
+
+```yaml
+- layout: image_evidence
+  kicker: 04 · EVIDENCE
+  title: 框架图：推荐如何影响搜索
+  data:
+    side_ratio: 0.62
+    image:
+      path: figures/p32-fig01.png     # 相对 deck 文件，或绝对路径
+      caption: Figure 2 Conceptual Framework for Customer Search
+      source: 来源：PlatStrat2023_paper_15.pdf · p32
+      fit: contain
+    cards:
+      - {title: 图里是谁在动, body: 推荐位把用户推向搜索，箭头方向即因果方向。}
+    takeaway: {label: 解读, text: 图与表一致：互补品类补回三成，替代品类几乎为零。}
+```
+
+---
+
 ## 9 规范与代码的已知差异
 
 以下差异以 `tokens.py` 为准，列出是为了让复刻者不踩坑。**每一项都是待收敛项，不是可选风格。**

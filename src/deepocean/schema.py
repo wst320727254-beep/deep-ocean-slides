@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """The page layout contract — shared by the PPTX renderer and the HTML renderer.
 
 This module is the **interface** between a deck document and the things that
@@ -160,6 +160,20 @@ LAYOUTS: Dict[str, Dict[str, Any]] = {
         },
     },
     # ------------------------------------------------------------------ extra
+    "image_evidence": {
+        "zh": "图片证据页",
+        "en": "Figure evidence",
+        "hero": False,
+        "chrome": True,
+        "asymmetric": True,
+        "fields": {
+            "image": _f("dict", True,
+                        "{path, caption, source, title, fit} —— path 相对 deck 文件或绝对路径"),
+            "side_ratio": _f("float", note="图片卡宽度占比，默认 0.62", default=0.62),
+            "cards": _f("list", note="右侧解读卡 [{title, body, items[], tone}]，2–3 张"),
+            "takeaway": _f("dict", note="{label, text} 深蓝结论卡"),
+        },
+    },
     "data_table": {
         "zh": "数据表",
         "en": "Data table",

@@ -1,4 +1,4 @@
-# Deep Ocean Slides · 深海学术风幻灯片
+﻿# Deep Ocean Slides · 深海学术风幻灯片
 
 > **像论文，不像海报。** — 把一套打磨好的学术风 16:9 PPT 设计规范，变成可执行、可检查、可复用的代码。
 
@@ -30,7 +30,7 @@
 
 - **设计令牌单一事实来源**：`src/deepocean/tokens.py` 一处定义颜色、字号阶梯、四区母版、配比预算；
   生成器、网页渲染器、linter、CSS 变量全部从它派生，改一个数字全篇同步。
-- **12 个版式**：封面、非对称双栏、巨型数字、实验设计、技术路线、左图右洞察、双栏对比卡、
+- **13 个版式**：封面、非对称双栏、巨型数字、实验设计、技术路线、左图右洞察、双栏对比卡、
   概念框架、2×2 矩阵、数据表、结论横幅、结尾页 —— 全部有字段契约（[`schema.py`](src/deepocean/schema.py)），
   写错字段名会被 `check` 当场指出。
 - **真正能编辑的 PPTX**：不是把网页截图塞进幻灯片，而是原生形状、文本框、可编辑图表
@@ -41,7 +41,7 @@
   `R003` 连续三页无峰值、`X001` 占位文字没删干净…… 31 条规则，其中"无 error"可直接当 CI 门禁
   （`deepocean check`），`--strict` 则把 `warn` 也当成待收敛项。
 - **中英双语文档 + 可复制的复刻教程**：从本仓库 CLI、纯手工 PowerPoint、Keynote、Figma/Canva 到
-  用 Python API 自定义版式，五条路线都有。
+  用 Python API 自定义版式，六条路线都有。
 
 ## 安装
 
@@ -50,7 +50,7 @@
 ```bash
 git clone https://github.com/wst320727254-beep/deep-ocean-slides.git
 cd deep-ocean-slides
-pip install -e ".[yaml]"      # 需要读写 .yaml deck；只用 .json 可省掉 [yaml]
+pip install -e ".[yaml,paper]"   # paper 只在你直接用 PDF 出初稿时才需要
 ```
 
 依赖只有 `python-pptx` 与 `Pillow`，Python 3.9+。
@@ -70,6 +70,25 @@ deepocean build mytalk/deck.yaml -o out/mytalk.pptx
 deepocean html  mytalk/deck.yaml -o out/mytalk.html
 deepocean check mytalk/deck.yaml --strict
 ```
+
+### 从一篇论文直接出初稿
+
+把 PDF 丢给 `from-paper`：它会抽出章节、数字、表格和**可用的配图**，按版式节奏排成一份
+可编译的 deck（离线、不调用模型；每一处数字都带原文页码）：
+
+```bash
+deepocean from-paper "汇报二 生成式AI.pdf" --journal "ISR · 2025" --max-figures 1 --build
+#   → 汇报二 生成式AI.digest.md   摘要包（章节/数字/表格/候选配图）
+#   → 汇报二 生成式AI.figures/   导出的配图 PNG（自动挑选、自动缩放）
+#   → 汇报二 生成式AI.deck.yaml  8 页初稿（cover → 背景 → 方法 → 结果 → 证据 → 表格 → 发现 → 总结）
+#   → 汇报二 生成式AI.pptx      顺带编译产物
+```
+
+想让它顺便改写叙事（而不是"原文要点罗列"）：加 `--llm`，并用 `DEEPSEEK_API_KEY`
+或 `OPENAI_API_KEY` 提供密钥；模型输出会先过 schema 校验，不合格会自动要求它改一轮。
+
+> 初稿不编造：文字来自原文句子，数字带页码，配图来自 PDF 内嵌图；提取不到的部分会明确写出
+> "请对照原文补充"，而不是悄悄编一个。**配图最多 2 页**（默认 1 页）——这是规范里"图片不要多"的硬约束。
 
 一份 deck 就是一个 YAML/JSON 文件：
 
@@ -109,7 +128,7 @@ pages:
 查询版式需要哪些字段：
 
 ```bash
-deepocean layouts              # 全部 12 个版式的字段表
+deepocean layouts              # 全部 13 个版式的字段表
 deepocean layouts chart_insight
 ```
 
@@ -173,6 +192,7 @@ def my_page(slide, page, ctx):
 | `concept_flow` | 左 → 中 ⇄ → 右 概念框架 | 08 |
 | `matrix2x2` | 2×2 机制矩阵（380×190 象限 + 20px 中心点） | 09 |
 | `data_table` | 数据表（深蓝表头 + 斑马纹 + 高亮列） | 附录 |
+| `image_evidence` | 图片证据页（论文配图 + 图注 + 右侧解读，**全篇 ≤ 2 页**） | 配图 |
 | `key_findings` | 深蓝横幅三个数字 + 下方启示卡 | 11 |
 | `closing` | 加高顶条 + 金句区 + 局限/展望双卡 | 12 |
 
@@ -196,12 +216,12 @@ CI 直接拿它当门禁（`--strict` 会把 `warn` 也算失败）。
 ```
 src/deepocean/
   tokens.py       设计令牌：颜色、字号阶梯、四区母版、配比预算（唯一事实来源）
-  schema.py       12 个版式的字段契约（生成器与网页渲染器共同的接口）
+  schema.py       13 个版式的字段契约（生成器与网页渲染器共同的接口）
   spec.py         deck 文档模型（Deck / Page / Meta）+ 校验
   primitives.py   px 单位的 drawing 原语：矩形、文本、箭头、CJK 度量与换行
   components.py   组件：卡片、KPI、流程、对比组、矩阵、表格、横幅
   charts.py       原生 PPTX 图表（数据标签、系列配色、坐标轴）
-  layouts.py      12 个版式的几何实现 + 母版外壳
+  layouts.py      13 个版式的几何实现 + 母版外壳
   build.py        deck → .pptx（含 Office 主题色/字体注入）
   html.py         deck → 单文件 HTML（内联 CSS + SVG 图表，可打印为 PDF）
   check.py        31 条排版自检规则
@@ -225,13 +245,14 @@ tests/            单元测试 + 示例一致性守卫
 | `deepocean layouts [LAYOUT]` | 版式字段说明 |
 | `deepocean tokens [--md\|--json\|--css]` | 设计令牌 |
 | `deepocean units` | px → pt/in/cm/Keynote/Figma 换算表 |
-| `deepocean demo -o out` | 生成内置 13 页示例 |
+| `deepocean demo -o out` | 生成内置 14 页示例 |
+| `deepocean from-paper paper.pdf` | **论文 PDF → 摘要包 + deck 初稿**（`--llm` 让模型改写叙事） |
 
 ## 文档
 
 - [docs/STYLE.md](docs/STYLE.md) — 设计规范全文（权威定义，改颜色/字号先看这里）
 - [docs/TOKENS.md](docs/TOKENS.md) — 令牌参考与单位换算
-- [docs/TUTORIAL.md](docs/TUTORIAL.md) — 五条复刻/使用路线
+- [docs/TUTORIAL.md](docs/TUTORIAL.md) — 六条复刻/使用路线
 - [docs/CHECKLIST.md](docs/CHECKLIST.md) — 交付前自检清单（含自动检查码）
 - [assets/deep-ocean-guide.html](assets/deep-ocean-guide.html) — 原始单文件图文手册（可直接打印）
 
@@ -282,7 +303,7 @@ colours, the 6% red budget, page rhythm). Canvas is 1280×720 px (16:9), `pt = p
 
 ```bash
 pip install -e ".[yaml]"
-deepocean demo -o out --check          # 13-page reference deck + HTML + lint report
+deepocean demo -o out --check          # 14-page reference deck + HTML + lint report
 deepocean build your-deck.yaml -o out.pptx
 ```
 

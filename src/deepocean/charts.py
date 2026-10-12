@@ -180,15 +180,23 @@ def _style_labels(plot: Any, number_format: str, size_px: float,
         if element is None or element.find(qn("c:dLbl")) is not None:
             element = _series_dlbls(plot, element)
         if element is not None:
-            for name in ("c:showVal", "c:showCatName", "c:showLegendKey",
-                         "c:showSerName", "c:showPercent", "c:showBubbleSize"):
+            # Value labels only.  Turning every flag on (category name, series
+            # name, legend key) printed rows of "浏览 PV; 推荐渠道;" above the
+            # bars — an academic chart must be readable at a glance.
+            # Doughnuts show the percentage as well; bars do not need it.
+            for name, on in (("c:showVal", True),
+                             ("c:showPercent", kind == "doughnut"),
+                             ("c:showCatName", False),
+                             ("c:showSerName", False),
+                             ("c:showLegendKey", False),
+                             ("c:showBubbleSize", False)):
                 node = element.find(qn(name))
                 if node is None:
                     node = element.makeelement(qn(name), {})
                 else:
                     element.remove(node)
                 element.insert(0, node)
-                node.set("val", "1")
+                node.set("val", "1" if on else "0")
     except (AttributeError, ValueError):  # pragma: no cover
         pass
 

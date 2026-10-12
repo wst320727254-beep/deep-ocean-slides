@@ -15,8 +15,23 @@
 
 ### Added
 
+- **`deepocean from-paper <pdf>`**：论文 PDF → 摘要包（章节 / 数字 / 表格 / 候选配图）→ 可编译的 `deck.yaml` 初稿。
+  - `deepocean/paper.py`：离线提取（pypdf），标题用页面最大字号识别，数字带原文页码，配图自动过滤图标并按"图注关键词 + 形状"排序。
+  - `deepocean/author.py`：离线骨架（只用原文内容，绝不编造）与 `--llm` 模型出稿（OpenAI 兼容端点，输出过 schema 校验，失败自动纠一轮）。
+  - 表格只在"网格一致 + 填充率高 + 含数字"时才成页；配图页默认 1 页、上限 2 页。
+- **第 13 个版式 `image_evidence`**（图片证据页）：论文配图 + 图注 + 来源 + 右侧解读卡；PPTX 与 HTML 两个渲染器同时实现，图片按 contain 等比缩放并加 1px 细框，HTML 版内联 base64 保持单文件。
+- `primitives.picture()` / `fit_box()` / `resolve_asset()`：px 单位的等比插图原语，相对路径按 deck 文件所在目录解析。
+- `tools/make_preview.py --deck`：可预览任意 deck（不再只限内置示例）。
+- 可选依赖 `[paper]`（pypdf）；`tests/test_paper.py` 15 个测试。
+
+### Fixed
+
+- 无。
+
+### Docs
+
 - 贡献指南 `CONTRIBUTING.md`：环境搭建、测试、版式与组件扩展流程、Conventional Commits、PR 门禁。
-- 设计文档集 `docs/`：`STYLE.md`（风格规范与代码对照）、`TOKENS.md`（令牌参考手册）、`TUTORIAL.md`（五条复刻路线与 FAQ）、`CHECKLIST.md`（交付前自检清单与 CI 接入）。
+- 设计文档集 `docs/`：`STYLE.md`（风格规范与代码对照）、`TOKENS.md`（令牌参考手册）、`TUTORIAL.md`（复刻路线与 FAQ）、`CHECKLIST.md`（交付前自检清单与 CI 接入）。
 
 ## [1.0.0] - 2026-10-12
 

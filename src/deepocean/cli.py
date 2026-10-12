@@ -61,6 +61,63 @@ def _stamp(text: str) -> str:
 # --------------------------------------------------------------------------- #
 
 
+def cmd_from_paper(args: argparse.Namespace) -> int:
+    """PDF -> digest -> deck.yaml (offline skeleton, or model-authored)."""
+    from . import author, paper
+
+    if not os.path.exists(args.pdf):
+        raise SystemExit(f"{PROG}: 找不到 {args.pdf}")
+    stem = os.path.splitext(os.path.basename(args.pdf))[0]
+    work_dir = os.path.dirname(os.path.abspath(args.pdf))
+    figures_dir = args.figures or os.path.join(work_dir, stem + ".figures")
+
+    print(f"→ 读取 {args.pdf}")
+    digest = paper.extract(args.pdf, figures_dir=figures_dir)
+    print(f"  标题：{digest.title or '(未识别)'}")
+    print(f"  页数 {digest.pages} · 章节 {len(digest.sections)} · 数字 {len(digest.numbers)} · "
+          f"表格 {len(digest.tables)} · 配图 {len(digest.figures)}")
+    for warning in digest.warnings:
+        print(f"  ! {warning}")
+
+    digest_path = args.digest or os.path.join(work_dir, stem + ".digest.md")
+    with open(digest_path, "w", encoding="utf-8") as fh:
+        fh.write(digest.to_markdown())
+    print(f"✓ DIGEST {digest_path}")
+
+    if args.llm:
+        try:
+            data, notes = author.llm_deck(digest, base_url=args.base_url, model=args.model,
+                                          api_key=args.api_key, max_figures=args.max_figures)
+        except RuntimeError as exc:
+            print(f"! 模型出稿失败：{exc}")
+            print("  退回离线骨架（不调用模型，只使用原文提取到的内容）")
+            data, notes = author.skeleton_deck(digest, journal=args.journal, kicker=args.kicker,
+                                               max_figures=args.max_figures, author=args.author), \
+                ["离线骨架（模型不可用）"]
+        else:
+            for note in notes:
+                print(f"  · {note}")
+    else:
+        data = author.skeleton_deck(digest, journal=args.journal, kicker=args.kicker,
+                                    max_figures=args.max_figures, author=args.author)
+        notes = ["离线骨架：只使用 PDF 中提取到的文字与数字，不会编造内容。"]
+        print("  · 离线骨架（未调用模型；加 --llm 让模型改写叙事）")
+
+    deck = spec_mod.Deck.from_dict(data)
+    out = args.out or os.path.join(work_dir, stem + ".deck.yaml")
+    spec_mod.Deck.save(deck, out)
+    print(f"✓ DECK   {out}  ({len(deck.pages)} 页：{', '.join(deck.layouts())})")
+
+    report = _report_for(deck, args, banner="初稿自检")
+    if args.build:
+        from . import build as build_mod
+
+        pptx = os.path.splitext(out)[0] + ".pptx"
+        result = build_mod.build(deck, pptx)
+        print(f"✓ PPTX   {result.path}")
+    return report
+
+
 def cmd_demo(args: argparse.Namespace) -> int:
     from . import build as build_mod
     from . import examples_data
@@ -373,6 +430,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--strict", action="store_true")
     p.add_argument("--no-color", action="store_true")
     p.set_defaults(func=cmd_preview)
+
+    p = sub.add_parser("from-paper", help="PDF → 摘要包 → deck.yaml 初稿（可选模型改写）")
+    p.add_argument("pdf", help="论文 PDF")
+    p.add_argument("-o", "--out", help="输出 deck.yaml（默认与 PDF 同名的 .deck.yaml）")
+    p.add_argument("--digest", help="摘要包 Markdown 输出路径")
+    p.add_argument("--figures", help="配图导出目录（默认 <PDF 同名>.figures/）")
+    p.add_argument("--max-figures", type=int, default=1, help="最多几页图片证据（默认 1，上限 2）")
+    p.add_argument("--journal", default="", help="封面刊名角标，如 ISR · 2025")
+    p.add_argument("--kicker", default="组会文献汇报", help="页眉眉标")
+    p.add_argument("--author", default="", help="汇报人")
+    p.add_argument("--build", action="store_true", help="顺带生成 pptx")
+    p.add_argument("--llm", action="store_true", help="调用模型改写叙事（需要 API key）")
+    p.add_argument("--base-url", default="https://api.deepseek.com/v1")
+    p.add_argument("--model", default="deepseek-chat")
+    p.add_argument("--api-key", default=None, help="也可用环境变量 DEEPSEEK_API_KEY / OPENAI_API_KEY")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--strict", action="store_true")
+    p.add_argument("--no-color", action="store_true")
+    p.set_defaults(func=cmd_from_paper)
 
     p = sub.add_parser("demo", help="生成内置示例 deck")
     p.add_argument("-o", "--out")

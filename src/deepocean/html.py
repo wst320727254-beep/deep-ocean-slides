@@ -1202,6 +1202,142 @@ def _layout_chart_insight(page: Any, deck: Any, index: int, total: int) -> str:
     return "\n".join(out)
 
 
+def _resolve_image(path: str, base_dir: Optional[str]) -> str:
+    """Locate a figure without pulling in python-pptx.
+
+    Same rule as :func:`deepocean.primitives.resolve_asset`: absolute wins, a
+    relative path is tried against the deck's folder first, then the CWD.
+    """
+    candidate = _plain(path)
+    if not candidate:
+        return ""
+    expanded = os.path.expanduser(candidate)
+    options = []
+    if os.path.isabs(expanded):
+        options.append(expanded)
+    if base_dir:
+        options.append(os.path.join(base_dir, expanded))
+    options.append(os.path.abspath(expanded))
+    for option in options:
+        if os.path.exists(option):
+            return option
+    return ""
+
+
+def _data_uri(path: str, base_dir: Optional[str] = None) -> str:
+    """Inline a figure as a data URI so the HTML stays one portable file."""
+    import base64
+    import mimetypes
+
+    resolved = _resolve_image(path, base_dir)
+    if not resolved:
+        return ""
+    mime = mimetypes.guess_type(resolved)[0] or "image/png"
+    try:
+        with open(resolved, "rb") as fh:
+            payload = base64.b64encode(fh.read()).decode("ascii")
+    except OSError:
+        return ""
+    return f"data:{mime};base64,{payload}"
+
+
+def _figure_card(x: float, y: float, w: float, h: float, image: Any,
+                 base_dir: Optional[str] = None) -> str:
+    """Left card of ``image_evidence``: the figure plus its caption and source."""
+    image = image if isinstance(image, dict) else {}
+    pad = 20.0
+    inner_w = max(80.0, w - 2 * pad)
+    title = _plain(image.get("title"))
+    caption = _plain(image.get("caption"))
+    source = _plain(image.get("source"))
+    uri = _data_uri(_plain(image.get("path")), base_dir)
+
+    head: List[str] = []
+    header_h = 0.0
+    if title:
+        head.append(f'<h3 class="do-card-title" style="margin:0;font-size:16px;">'
+                    f'{_inline(title)}</h3>')
+        header_h = 24.0
+    foot_h = (24.0 if caption else 0.0) + (18.0 if source else 0.0)
+    body_top = pad + header_h + (12.0 if header_h else 0.0)
+    avail = max(80.0, h - body_top - foot_h - 12.0)
+
+    if uri:
+        frame = (f'<div style="position:absolute;left:{_px(pad)}px;top:{_px(body_top)}px;'
+                 f'width:{_px(inner_w)}px;height:{_px(avail)}px;display:flex;'
+                 f'align-items:center;justify-content:center;border:1px solid var(--do-line);'
+                 f'border-radius:4px;overflow:hidden;background:#fff;">'
+                 f'<img src="{uri}" alt="{_esc(caption or title or "figure")}" '
+                 f'style="max-width:100%;max-height:100%;object-fit:contain;display:block;">'
+                 f'</div>')
+    else:
+        frame = (f'<div style="position:absolute;left:{_px(pad)}px;top:{_px(body_top)}px;'
+                 f'width:{_px(inner_w)}px;height:{_px(avail)}px;border:1px dashed var(--do-line);'
+                 f'border-radius:4px;background:var(--do-light);display:flex;'
+                 f'align-items:center;justify-content:center;color:var(--do-t3);font-size:12px;">'
+                 f'配图缺失 · image not found</div>')
+    head.append(frame)
+    if caption:
+        head.append(f'<div class="do-card-foot" style="position:absolute;left:{_px(pad)}px;'
+                    f'bottom:{_px(12.0 + (18.0 if source else 0.0))}px;'
+                    f'width:{_px(inner_w)}px;margin:0;">{_inline(caption)}</div>')
+    if source:
+        head.append(f'<div class="do-card-foot" style="position:absolute;left:{_px(pad)}px;'
+                    f'bottom:8px;width:{_px(inner_w)}px;margin:0;color:var(--do-t3);">'
+                    f'{_esc(source)}</div>')
+    return (f'<div class="do-card do-tone-plain" style="{_box(x, y, w, h)}'
+            f'padding:{_px(pad)}px;">' + "".join(head) + "</div>")
+
+
+def _layout_image_evidence(page: Any, deck: Any, index: int, total: int) -> str:
+    data = page.data if isinstance(page.data, dict) else {}
+    image = data.get("image") or {}
+    ratio = _clamp(_as_float(data.get("side_ratio"), 0.62), 0.50, 0.72)
+    left_w = (CONTENT_W - GAP) * ratio
+    right_x = CONTENT_X + left_w + GAP
+    right_w = CONTENT_R - right_x
+    base_dir = os.path.dirname(getattr(deck, "source_path", "") or "") or None
+
+    out = [_figure_card(CONTENT_X, CONTENT_Y, left_w, CARD_H, image, base_dir)]
+
+    blocks: List[Dict[str, Any]] = []
+    for card in (data.get("cards") or [])[:3]:
+        if isinstance(card, dict):
+            blocks.append({"kind": "card", "data": card})
+    takeaway = data.get("takeaway")
+    if isinstance(takeaway, dict) and (takeaway.get("text") or takeaway.get("label")):
+        blocks.append({"kind": "takeaway", "data": takeaway})
+    if not blocks:
+        return "\n".join(out)
+
+    count = len(blocks)
+    gap = GAP
+    avail = CARD_H - gap * (count - 1)
+    needs = [120.0 if b["kind"] == "takeaway" else 104.0 for b in blocks]
+    total_need = sum(needs) or 1.0
+    scale = min(1.0, avail / total_need)
+    heights = [n * scale for n in needs]
+    slack = avail - sum(heights)
+    if slack > 0:
+        heights = [h + slack / count for h in heights]
+    heights[-1] = avail - sum(heights[:-1])
+    for i, block in enumerate(blocks):
+        y = CONTENT_Y + sum(heights[:i]) + i * gap
+        block_h = max(40.0, heights[i])
+        data_block = block["data"]
+        if block["kind"] == "takeaway":
+            label = _plain(data_block.get("label")) or "解读"
+            inner = (f'<p class="do-label">{_esc(label)}</p>'
+                     f'<div class="do-body">{_rich(data_block.get("text"))}</div>')
+            out.append(_card(_box(right_x, y, right_w, block_h), inner,
+                             tone="primary", pad="sm"))
+        else:
+            out.append(_card_from_dict(right_x, y, right_w, block_h, data_block,
+                                       default_tone="plain", title_sm=True, pad="sm",
+                                       body_sm=block_h < 110.0))
+    return "\n".join(out)
+
+
 def _layout_split_cards(page: Any, deck: Any, index: int, total: int) -> str:
     data = page.data if isinstance(page.data, dict) else {}
     ratio = _clamp(_as_float(data.get("ratio"), 0.56), 0.45, 0.62)
@@ -1568,6 +1704,7 @@ _LAYOUT_RENDERERS: Dict[str, Callable[[Any, Any, int, int], str]] = {
     "split_cards": _layout_split_cards,
     "concept_flow": _layout_concept_flow,
     "matrix2x2": _layout_matrix2x2,
+    "image_evidence": _layout_image_evidence,
     "data_table": _layout_data_table,
     "key_findings": _layout_key_findings,
     "closing": _layout_closing,

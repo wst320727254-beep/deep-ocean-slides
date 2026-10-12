@@ -66,10 +66,14 @@ def find_pdftoppm() -> str:
     raise SystemExit("找不到 pdftoppm（poppler-utils）。")
 
 
-def build_deck(out_pptx: str) -> str:
+def build_deck(out_pptx: str, deck_path: str = "") -> str:
+    """Build the bundled reference deck, or any deck given with ``--deck``."""
     from deepocean import build, examples_data, spec
 
-    deck = spec.Deck.from_dict(examples_data.DEMO_DECK)
+    if deck_path:
+        deck = spec.Deck.load(deck_path)
+    else:
+        deck = spec.Deck.from_dict(examples_data.DEMO_DECK)
     result = build.build(deck, out_pptx)
     print(f"✓ PPTX  {result.path}  ({result.pages} 页)")
     return result.path
@@ -139,6 +143,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", default=os.path.join(ROOT, "assets", "preview.png"))
+    parser.add_argument("--deck", default="", help="要预览的 deck.yaml（默认内置参考 deck）")
     parser.add_argument("--pages", default=DEFAULT_PAGES, help="逗号分隔的页码，1 起")
     parser.add_argument("--cols", type=int, default=2)
     parser.add_argument("--dpi", type=int, default=110)
@@ -156,7 +161,7 @@ def main(argv=None) -> int:
     if args.skip_render:
         images = sorted(glob.glob(os.path.join(workdir, "page*.png")))
     else:
-        pptx = build_deck(os.path.join(workdir, "deep-ocean-demo.pptx"))
+        pptx = build_deck(os.path.join(workdir, "deep-ocean-demo.pptx"), args.deck)
         pdf = to_pdf(pptx, workdir)
         all_pages = rasterise(pdf, workdir, pages, dpi=args.dpi)
         images = [all_pages[p - min(pages)] for p in pages if 1 <= p - min(pages) + 1 <= len(all_pages)]

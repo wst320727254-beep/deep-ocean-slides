@@ -28,6 +28,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
+import os
+
 from . import schema, tokens
 from .charts import add_chart, chart_height
 from .components import (bullets as _bullets, card, card_head, compare_pair,
@@ -36,7 +38,7 @@ from .components import (bullets as _bullets, card, card_head, compare_pair,
 from .components import footnote as _footnote
 from .components import kpi as _kpi
 from .components import _para, _render_paras, _wrap_count
-from .primitives import add_arrow, hairline, oval, rect, truncate
+from .primitives import add_arrow, hairline, oval, picture, rect, truncate
 
 __all__ = ["RENDERERS", "build_page", "render"]
 
@@ -893,6 +895,92 @@ def _unknown(layout: str) -> None:
     )
 
 
+# --------------------------------------------------------------------------- #
+# 13 - image_evidence
+# --------------------------------------------------------------------------- #
+
+
+def render_image_evidence(slide: Shape, page: Any, ctx: Any) -> None:
+    """One paper figure on the left, the reading of it on the right.
+
+    The figure is *contain*-fitted inside its card and framed at exactly the
+    rect it occupies, so the card never shows a stray band of white.  The guide
+    asks for evidence, not decoration: one figure, at most two such pages per
+    deck (see ``check`` rule R007).
+    """
+    spec_ = _dict(page.need("image"))
+    ratio = _clamp(page.get("side_ratio", 0.62), 0.50, 0.72, 0.62)
+    cards = [c for c in _list(page.get("cards")) if isinstance(c, dict)][:3]
+    take = _dict(page.get("takeaway"))
+
+    left_w = (CONTENT_W - GAP) * ratio
+    right_x = CONTENT_X + left_w + GAP
+    right_w = CONTENT_W - left_w - GAP
+
+    box = card(slide, CONTENT_X, BAND_Y, left_w, CARD_H, tone="plain", pad="md")
+    cur = float(box["cy"])
+    inner_w = float(box["cw"])
+    bottom = float(box["cy"]) + float(box["ch"])
+
+    title = str(spec_.get("title", "") or "")
+    caption = str(spec_.get("caption", "") or "")
+    source = str(spec_.get("source", "") or "")
+    caption_h = 34.0 if caption else 0.0
+    source_h = 18.0 if source else 0.0
+
+    if title:
+        used = _text(slide, float(box["cx"]), cur, inner_w, 30, title,
+                     token="card_title", size=16, color="navy", bold=True, line_spacing=1.25)
+        cur += used["h"] + 8.0
+
+    img_area_h = max(80.0, bottom - cur - caption_h - source_h - 8.0)
+    base_dir = os.path.dirname(getattr(ctx.deck, "source_path", "") or "") or None
+    try:
+        _, rect_px = picture(slide, str(spec_.get("path", "")),
+                             float(box["cx"]), cur, inner_w, img_area_h,
+                             mode=str(spec_.get("fit") or "contain"), base_dir=base_dir)
+        # 1px hairline exactly around the placed figure keeps it in the grid.
+        rect(slide, rect_px[0] - 1.0, rect_px[1] - 1.0, rect_px[2] + 2.0, rect_px[3] + 2.0,
+             fill=None, line="line", line_w=1.0)
+    except FileNotFoundError as exc:
+        # A missing figure must be loud but must not kill the deck.
+        rect(slide, float(box["cx"]), cur, inner_w, img_area_h, fill="light", line="line")
+        _text(slide, float(box["cx"]) + 16.0, cur + 16.0, inner_w - 32.0, 60.0,
+              f"配图缺失：{exc}", token="card_body", size=13.0, color="brick", line_spacing=1.4)
+
+    y = bottom - caption_h - source_h
+    if caption:
+        _text(slide, float(box["cx"]), y, inner_w, 30.0, truncate(caption, 11.5, inner_w, False),
+              token="caption", size=11.5, color="t2", line_spacing=1.3)
+    if source:
+        _text(slide, float(box["cx"]), bottom - source_h, inner_w, 16.0,
+              truncate(source, 11.5, inner_w, False),
+              token="caption", size=11.5, color="t3", line_spacing=1.2)
+
+    # -- right column: what the figure means ------------------------------- #
+    nav_h = 0.0
+    slots = list(cards)
+    take_h = 120.0 if take else 0.0
+    if slots:
+        gap_total = GAP * (len(slots) - 1) + (GAP if take else 0.0)
+        per = max(96.0, (CARD_H - take_h - gap_total) / len(slots))
+    else:
+        per = 0.0
+    cy = BAND_Y
+    for item in slots:
+        cbox = card(slide, right_x, cy, right_w, per,
+                    tone=str(item.get("tone") or "plain"), pad="sm")
+        card_head(slide, cbox, title=str(item.get("title", "") or ""),
+                  body=str(item.get("body", "") or ""), items=_list(item.get("items")),
+                  title_size=16.0, body_size=13.0, item_size=13.0)
+        cy += per + GAP
+    if take:
+        nav_h = max(96.0, BAND_Y + CARD_H - cy)
+        takeaway(slide, right_x, BAND_Y + CARD_H - nav_h, right_w, nav_h,
+                 str(take.get("text", "") or ""),
+                 label=str(take.get("label", "") or "解读"), tone="primary", size=14.0)
+
+
 #: Layout name (from :data:`deepocean.schema.LAYOUTS`) -> renderer callable.
 RENDERERS: Dict[str, Callable[[Shape, Any, Any], None]] = {
     "cover": render_cover,
@@ -904,6 +992,7 @@ RENDERERS: Dict[str, Callable[[Shape, Any, Any], None]] = {
     "split_cards": render_split_cards,
     "concept_flow": render_concept_flow,
     "matrix2x2": render_matrix2x2,
+    "image_evidence": render_image_evidence,
     "data_table": render_data_table,
     "key_findings": render_key_findings,
     "closing": render_closing,

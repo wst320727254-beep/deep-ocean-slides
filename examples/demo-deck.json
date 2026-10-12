@@ -455,6 +455,37 @@
       }
     },
     {
+      "layout": "image_evidence",
+      "kicker": "10 · FRAMEWORK",
+      "title": "框架图：推荐先形成考虑集，搜索再满足需求",
+      "subtitle": "论文原图或自制示意图都走这一页版式",
+      "data": {
+        "side_ratio": 0.62,
+        "image": {
+          "path": "assets/concept-framework.png",
+          "caption": "图：推荐与搜索的品类关系（示意，非论文原图）",
+          "source": "本仓库自制 · tools/make_sample_figure.py 可重新生成",
+          "fit": "contain"
+        },
+        "cards": [
+          {
+            "title": "怎么读这张图",
+            "body": "横向是用户路径，纵向是品类分化；箭头方向就是机制方向。",
+            "tone": "tint"
+          },
+          {
+            "title": "什么时候用",
+            "body": "需要指出机制、框架或实验流程时，用一张图代替三段文字。",
+            "tone": "plain"
+          }
+        ],
+        "takeaway": {
+          "label": "配图纪律",
+          "text": "全篇最多 2 页图片证据；示意图只讲机制，数据一律回到图表页读数。"
+        }
+      }
+    },
+    {
       "layout": "data_table",
       "kicker": "APPENDIX · A1",
       "title": "附录：主效应与补偿比例完整表",

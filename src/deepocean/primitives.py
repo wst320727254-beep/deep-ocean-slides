@@ -23,6 +23,7 @@ Frozen API (other modules depend on these signatures)
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
@@ -297,6 +298,94 @@ def hairline(slide: Shape, x: float, y: float, w: float, color: ColorLike = "lin
              thickness: float = 1.0) -> Shape:
     """A 1px divider drawn as a thin filled rectangle (prints crisply)."""
     return rect(slide, x, y, w, thickness, fill=color)
+
+
+def _asset_roots(base_dir: Optional[str]) -> List[str]:
+    """Directories a relative image path may be resolved against, in order.
+
+    The deck's own folder wins (so a deck folder stays portable), then the
+    working directory, then the checkout's ``examples/`` — the last one is what
+    makes the bundled demo work from anywhere, since its figure lives in the
+    repository next to ``examples/demo-deck.yaml``.
+    """
+    roots: List[str] = []
+    if base_dir:
+        roots.append(base_dir)
+    roots.append(os.getcwd())
+    here = os.path.dirname(os.path.abspath(__file__))            # .../src/deepocean
+    package_root = os.path.dirname(os.path.dirname(here))        # repo root (source checkout)
+    roots.append(package_root)
+    roots.append(os.path.join(package_root, "examples"))
+    return roots
+
+
+def resolve_asset(path: str, base_dir: Optional[str] = None) -> str:
+    """Find an image referenced by a deck."""
+    if not path:
+        raise FileNotFoundError("empty image path")
+    candidate = os.path.expanduser(str(path))
+    search: List[str] = []
+    if os.path.isabs(candidate):
+        search.append(candidate)
+    else:
+        search += [os.path.join(root, candidate) for root in _asset_roots(base_dir)]
+    for item in search:
+        if os.path.exists(item):
+            return item
+    raise FileNotFoundError(f"image not found: {path} (looked in {', '.join(search[:4])})")
+
+
+def image_size(path: str) -> Tuple[int, int]:
+    """(width, height) in px, without decoding the whole file twice."""
+    from PIL import Image
+
+    with Image.open(path) as img:
+        return img.size
+
+
+def fit_box(path: str, x: float, y: float, w: float, h: float,
+            *, mode: str = "contain", align: str = "center",
+            valign: str = "middle") -> Tuple[float, float, float, float]:
+    """Place an image of natural size ``path`` inside ``x, y, w, h`` (px).
+
+    ``contain`` keeps the aspect ratio and centres the image; ``cover`` fills the
+    box and is intended for figures that may be cropped.  Returns the px rect the
+    picture should occupy so callers can draw a frame around exactly that.
+    """
+    try:
+        iw, ih = image_size(path)
+    except Exception:
+        iw, ih = int(w), int(h)
+    if iw <= 0 or ih <= 0:
+        iw, ih = int(w), int(h)
+    scale = min(w / iw, h / ih) if mode == "contain" else max(w / iw, h / ih)
+    fw, fh = iw * scale, ih * scale
+    if align == "left":
+        fx = x
+    elif align == "right":
+        fx = x + w - fw
+    else:
+        fx = x + (w - fw) / 2.0
+    if valign == "top":
+        fy = y
+    elif valign == "bottom":
+        fy = y + h - fh
+    else:
+        fy = y + (h - fh) / 2.0
+    return (fx, fy, fw, fh)
+
+
+def picture(slide: Shape, path: str, x: float, y: float, w: float, h: float,
+            *, mode: str = "contain", align: str = "center", valign: str = "middle",
+            base_dir: Optional[str] = None) -> Tuple[Shape, Tuple[float, float, float, float]]:
+    """Insert an image with ``contain`` fit; returns (shape, fitted px rect)."""
+    resolved = resolve_asset(path, base_dir)
+    rect_px = fit_box(resolved, x, y, w, h, mode=mode, align=align, valign=valign)
+    pic = slide.shapes.add_picture(
+        resolved, Emu(px_to_emu(rect_px[0])), Emu(px_to_emu(rect_px[1])),
+        Emu(px_to_emu(rect_px[2])), Emu(px_to_emu(rect_px[3])))
+    no_shadow(pic)
+    return pic, rect_px
 
 
 # --------------------------------------------------------------------------- #
