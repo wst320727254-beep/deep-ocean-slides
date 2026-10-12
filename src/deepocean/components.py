@@ -596,7 +596,7 @@ def card_head(slide: Shape, card_obj: Any = None, *, x: Optional[float] = None,
         chip_w = min(max(46.0, want), float(box["cw"]) * 0.58)
         _chip(slide, box["cx"], cur, chip_w, chip_h, chip_label,
               tone="primary" if box.get("fill") == "navy" else "accent",
-              size=chip_size)
+              fill=str(box.get("fill") or "mint"), size=chip_size)
         if chip_en:
             en_w = max(20.0, float(box["cw"]) - chip_w - 8)
             _render_paras(slide, box["cx"] + chip_w + 8, cur + 2, en_w,
@@ -650,7 +650,7 @@ def card_head(slide: Shape, card_obj: Any = None, *, x: Optional[float] = None,
         room = bottom - cur - (20.0 if footer else 0.0)
         bullets(slide, box["cx"], cur, float(box["cw"]), max(14.0, room),
                 items, size=float(item_size), color=sub_key, mark=mark,
-                mark_color="white" if box.get("fill") == "navy" else None)
+                mark_color={"navy": "white", "pink": "brick"}.get(str(box.get("fill")), None))
         cur = max(cur, bottom - (20.0 if footer else 0.0))
 
     # Footer --------------------------------------------------------------- #
@@ -900,7 +900,7 @@ def bullets(slide: Shape, x: float, y: float, w: float, h: float,
     """
     body_color = color or "t2"
     lead = lead_color or ("t1" if body_color in ("t2", "t1") else body_color)
-    glyph_color = mark_color or ("white" if body_color == "white" else "teal")
+    glyph_color = mark_color or {"white": "white", "pink": "brick"}.get(body_color, "teal")
     entries = [it for it in (items or []) if it not in (None, "")]
     if not entries:
         return {"x": x, "y": y, "w": w, "h": h, "size": size, "lines": 0}
@@ -964,10 +964,13 @@ def chip(slide: Shape, x: float, y: float, w: float, h: float, text: str, *,
     if fill is not None:
         fill_key = fill
     text_color = color or ink
-    if fill_key == "pink" and color is None:
-        text_color = "brick"        # teal would sink into the warning tint
-    elif fill_key == "navy" and color is None:
-        text_color = "white"
+    if color is None:
+        # Match the pill to the surface it sits on: a teal label would sink into
+        # the warning tint, and a navy label into the navy card.
+        if fill_key == "pink":
+            text_color = "brick"
+        elif fill_key == "navy":
+            text_color = "white"
     size_px = max(11.0, float(size))
     oval(slide, x, y, w, h, fill=fill_key)
     inner = max(10.0, w - 12.0)

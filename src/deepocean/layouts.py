@@ -649,7 +649,7 @@ def _concept_card(slide: Shape, x: float, y: float, w: float, h: float,
         _bullets(slide, float(box["cx"]), cur, float(box["cw"]),
                  float(box["cy"]) + float(box["ch"]) - cur, items,
                  size=13.5, color="t2", mark="▪", gap=7.0,
-                 mark_color="white" if box.get("fill") == "navy" else None)
+                 mark_color={"navy": "white", "pink": "brick"}.get(str(box.get("fill")), None))
     return box
 
 
@@ -947,6 +947,16 @@ def build_page(slide: Shape, page: Any, ctx: Any) -> None:
         deepocean.spec.SpecError: When a required layout field is missing.
     """
     layout = str(getattr(page, "layout", "") or "")
-    if schema.needs_chrome(layout):
+    # Resolve through this module's registry first, so an unknown layout fails
+    # with the RENDERERS listing rather than schema.resolve's own message.
+    canonical = layout
+    try:
+        canonical = schema.resolve(layout)
+    except KeyError:
+        _unknown(layout)
+    if schema.needs_chrome(canonical):
         master(slide, page, ctx)
-    render(layout, slide, page, ctx)
+    fn = RENDERERS.get(canonical)
+    if fn is None:
+        _unknown(layout)
+    fn(slide, page, ctx)

@@ -9,7 +9,7 @@ description = "Deep Ocean 学术风 16:9 幻灯片设计系统与生成工具链
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "wst320727254-beep", url = "https://github.com/wst320727254-beep" }]
+authors = [{ name = "wst320727254-beep" }]
 keywords = [
   "powerpoint", "pptx", "python-pptx", "slides", "presentation",
   "design-system", "design-tokens", "academic", "论文汇报", "组会汇报",
